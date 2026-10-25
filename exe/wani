@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require "wani/cli"
+exit Wani::CLI.new.run(ARGV)

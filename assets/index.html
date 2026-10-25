@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wani — Markdown presentation</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="toolbar">
+  <a class="brand" href="#slide=1" aria-label="Wani: 最初のスライド">Wani<span>Markdown × Ruby</span></a>
+  <nav aria-label="プレゼンテーション操作">
+    <button id="previous" title="前へ (← / PageUp)" disabled>←</button>
+    <output id="position" aria-live="polite">— / —</output>
+    <button id="next" title="次へ (→ / Space / PageDown)" disabled>→</button>
+    <span class="toolbar-divider"></span>
+    <button id="fullscreen" title="全画面 (F)" disabled>全画面</button>
+    <button id="speaker" title="発表者ノート (N)" disabled>ノート</button>
+    <button id="print" disabled>PDF</button>
+    <button id="print-notes" disabled>ノート付き PDF</button>
+  </nav>
+</header>
+<p id="status" role="status">Ruby を読み込んでいます…</p>
+<div id="viewport"><main id="stage" aria-label="スライド"></main></div>
+<aside id="warnings" role="status" hidden></aside>
+<footer class="help">← → ページ移動 <span>F 全画面</span><span>N ノート</span><span>Home / End 最初・最後</span></footer>
+<article id="print-pages" aria-hidden="true"></article>
+<script src="/assets/runtime.pr672.js" data-ruby-wasm-url="/assets/wani.wasm"></script>
+<script type="text/ruby" data-eval="async" src="/assets/bootstrap.rb"></script>
+</body>
+</html>

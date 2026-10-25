@@ -1,0 +1,11 @@
+{
+  "name": "wani-development",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:loader": "ruby scripts/build_loader.rb",
+    "test": "playwright test"
+  },
+  "dependencies": { "@ruby/4.0-wasm-wasi": "2.10.1" },
+  "devDependencies": { "@playwright/test": "1.61.1", "pdfjs-dist": "6.4.299" }
+}
