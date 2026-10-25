@@ -24,6 +24,9 @@ wani check
 wani serve
 ```
 
+rbenv 環境でインストール後に `wani: command not found` となる場合は、
+`rbenv rehash` を実行して実行ファイルの shim を更新してください。
+
 表示された http://127.0.0.1:8000/ を Chrome または Edge で開きます。
 `slides.md` を編集したらブラウザーを再読み込みしてください。
 生成されるプロジェクトは `slides.md` と空の `images/` だけです。
