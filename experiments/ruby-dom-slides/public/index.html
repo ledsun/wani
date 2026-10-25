@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruby DOM スライド技術検証</title>
+<link rel="stylesheet" href="./style.css">
+<h1>Ruby DOM スライド</h1>
+<p id="status" role="status">Ruby を読み込んでいます…</p>
+<label for="markdown">Markdown（--- の行でスライドを区切る）</label>
+<textarea id="markdown" rows="8"># Ruby から DOM を操作
+
+**kramdown** でスライドを描画します。
+
+---
+
+# キーボード操作
+
+- 右キー: 次へ
+- 左キー: 前へ
+
+---
+
+# 最後のスライド
+
+日本語も表示できます。</textarea>
+<button id="render" disabled>スライドを描画</button>
+<p>入力欄の外で左右キーを押すか、前へ・次へボタンを使ってください。</p>
+<nav aria-label="スライド操作">
+<button id="previous" disabled>前へ</button>
+<output id="position" aria-live="polite"></output>
+<button id="next" disabled>次へ</button>
+</nav>
+<main id="slides" aria-label="スライド"></main>
+<script src="./browser.umd.js"></script>
+<script type="module" src="./app.js"></script>
+</html>
