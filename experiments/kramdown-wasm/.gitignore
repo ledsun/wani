@@ -1,0 +1,7 @@
+.bundle/
+vendor/
+node_modules/
+public/*.wasm
+public/browser.umd.js
+test-results/
+playwright-report/
