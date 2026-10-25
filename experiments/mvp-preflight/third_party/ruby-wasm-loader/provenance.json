@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/ledsun/ruby.wasm",
+  "pull_request": "https://github.com/ruby/ruby.wasm/pull/672",
+  "commit": "dc6b0ffd5800ed9bfc49268ed8021d456f10ddf8",
+  "archive_sha256": "6c660ee6c153609d2d207bdb449d4f7fad911663fc6e0bb6dc45848569fa4a78",
+  "loader_sha256": "f1f996d4b429d93fb75c1b84245796ce89feb9be4d3ab46a400b095c087a973e",
+  "package": "@ruby/4.0-wasm-wasi",
+  "status": "unreleased PR build; not an official npm release",
+  "node_version_used": "24.22.1"
+}

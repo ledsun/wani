@@ -4,7 +4,7 @@
 
 | Issue | 検証 | 結論 |
 | --- | --- | --- |
-| [#5](https://github.com/ledsun/wani/issues/5) | 独自 JS なしの起動 | Ruby の起動・取得・描画は可能。ただし公式ローダー無変更ではローカルの独自 wasm を指定できない。取得先1箇所を変更した版で検証。 |
+| [#5](https://github.com/ledsun/wani/issues/5) | 独自 JS なしの起動 | PR #672 の固定コミットからビルドしたローダーを変更せずに同梱。HTML 属性でローカル wasm を指定する。 |
 | [#6](https://github.com/ledsun/wani/issues/6) | レイアウトと PDF | Ruby による計測・文字サイズ探索・画像待機・印刷 DOM 生成を確認。 |
 | [#7](https://github.com/ledsun/wani/issues/7) | 全画面と発表者画面 | Ruby のイベントから操作可能。postMessage の同期とブラウザーによる拒否の処理を確認。 |
 | [#8](https://github.com/ledsun/wani/issues/8) | 安全な共通パーサー | YAML 安全解析・GFM コードブロック・ノート抽出・許可した要素の描画を両環境で確認。 |
@@ -41,15 +41,32 @@ DejaVu フォントが必要。別環境では `scripts/build.rb` のフォン�
 - `public/bootstrap.rb`: 公式 `text/ruby` ローダーが非同期実行する Ruby 起動コード。
 - `public/index.html`: 既存 JS ローダーと `text/ruby` の宣言。独自アプリ JS は置かない。
 - `scripts/build.rb`: 公開版 wasm に Ruby / gem を `rbwasm pack` で追加。
-  既存ローダーの取得先1箇所のみを変更し、元版・LICENSE・NOTICE もコピーする。
-  元の文字列が1箇所でない場合は停止する。**ローダー無変更の検証ではない。**
+  PR #672 からビルドして同梱したローダーの SHA-256 を検証し、変更せずにコピーする。
+  HTML の `data-ruby-wasm-url="./preflight.wasm"` で取得先を指定する。
 - `scripts/parse.rb`: 同一パーサーをネイティブ CRuby で実行する CLI。
 - `scripts/serve.mjs`: 検証用の静的サーバー。#1 用の Ruby サーバーではない。
-- `test/`: 起動3件、レイアウト・PDF4件、ウィンドウ4件、パーサー10件。
+- `test/`: 起動6件、レイアウト・PDF4件、ウィンドウ4件、パーサー10件。
+- `third_party/ruby-wasm-loader/`: 未リリース PR の固定コミットからビルドした JS と LICENSE / NOTICE。
+  出所・チェックサム・再ビルド手順を同梱する。
 
 wasm と既存 JS アセットは生成物なので Git 管理対象外。`lib/` や gem を変更したら再ビルドする。
 ブラウザーへ含める gem は kramdown 2.5.2、rexml 3.4.4、kramdown-parser-gfm 1.1.0 のみ。
 YAML / Psych は公開版 Ruby WASM の標準ライブラリを使用する。
+
+## 未リリースローダーの採用
+
+PR [ruby/ruby.wasm#672](https://github.com/ruby/ruby.wasm/pull/672) のコミット
+`dc6b0ffd5800ed9bfc49268ed8021d456f10ddf8` に固定する。
+公式 npm 版ではなく、このコミットからビルドしたローダーを一時同梱する方式を採用した。
+従来の URL 文字列置換は廃止し、独自アプリ JS は追加していない。
+
+```html
+<script src="runtime.pr672.js" data-ruby-wasm-url="./preflight.wasm"></script>
+```
+
+通常ビルドでは同梱済みローダーをコピーする。ローダー自体の再ビルドは
+`npm run build:loader`。詳細は [同梱ファイルの説明](third_party/ruby-wasm-loader/README.md)。
+公式リリースに機能が入ったら、同じ属性を維持してコピー元を公式 npm 版へ差し替える。
 
 ## 手動確認
 
@@ -66,10 +83,20 @@ YAML / Psych は公開版 Ruby WASM の標準ライブラリを使用する。
 WSL2 上のサーバーへの Windows ブラウザーからの接続もこの環境では未検証。
 PDF とスクリーンショットは `test-results/` に生成される（Git 管理対象外）。
 
-## 実行記録 (2026-10-25)
+## 初回検証の実行記録 (2026-10-25 / URL置換方式)
 
 `CHROMIUM_PATH=/usr/bin/google-chrome npm test` : **21 passed (49.3s)**。
 最終生成 wasm は 33,236,595 bytes、生成日時 2026-10-25 21:34:24 JST。
 Ruby の組み込みソースの変更後に再生成したものを使用した。
 依存欠落による起動失敗を検出する負の検証も行い、復元後に全件成功した。
 生成物の実際の日時・サイズは `stat public/preflight.wasm` で確認できる。
+
+## PR #672 採用後の実行記録 (2026-10-25)
+
+`npm run build:loader` でソースの取得・既存 npm スクリプトによるビルド・SHA-256 の再現を確認。
+`npm run build` で新しく生成した wasm と PR ローダーを使い、
+`CHROMIUM_PATH=/usr/bin/google-chrome npm test` は **24 passed (1.0m)**。
+生成 wasm は 33,236,595 bytes、生成日時 2026-10-25 22:41:42 JST。
+HTML の wasm パスを一時的に壊すと起動テストが失敗することも確認し、復元後に起動テストを再実行した。
+復元後の起動テストは **6 passed (15.6s)**。
+ローダーの出所は `third_party/ruby-wasm-loader/provenance.json` を参照。

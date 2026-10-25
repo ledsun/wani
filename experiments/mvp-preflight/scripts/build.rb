@@ -1,10 +1,16 @@
 require "fileutils"
 require "bundler/setup"
 require "tmpdir"
+require "json"
+require "digest"
 
 Dir.chdir(File.expand_path("..", __dir__)) do
   runtime = "node_modules/@ruby/4.0-wasm-wasi/dist"
   abort "Run npm ci first" unless File.file?("#{runtime}/ruby+stdlib.wasm")
+  loader_root = "third_party/ruby-wasm-loader"
+  provenance = JSON.parse(File.read("#{loader_root}/provenance.json"))
+  loader = "#{loader_root}/browser.script.iife.js"
+  abort "Vendored PR loader checksum mismatch" unless Digest::SHA256.file(loader).hexdigest == provenance.fetch("loader_sha256")
   FileUtils.mkdir_p("public")
   Dir.mktmpdir("mvp-preflight-") do |stage|
     FileUtils.cp_r("lib/.", stage)
@@ -18,12 +24,8 @@ Dir.chdir(File.expand_path("..", __dir__)) do
                "--dir", "#{stage}::/app", "--output", "public/preflight.wasm"]
     abort "Packaging failed" unless system(*command)
   end
-  loader = File.binread("#{runtime}/browser.script.iife.js")
-  original = '`https://cdn.jsdelivr.net/npm/${pkg.name}@${pkg.version}/dist/ruby+stdlib.wasm`'
-  abort "Upstream loader changed; inspect before configuring" unless loader.scan(original).length == 1
-  File.binwrite("public/runtime.local.js", loader.sub(original, '"./preflight.wasm"'))
-  FileUtils.cp("#{runtime}/browser.script.iife.js", "public/runtime.original.js")
-  %w[LICENSE NOTICE].each { |name| FileUtils.cp("#{runtime}/#{name}", "public/runtime.#{name}") }
+  FileUtils.cp(loader, "public/runtime.pr672.js")
+  %w[LICENSE NOTICE].each { |name| FileUtils.cp("#{loader_root}/#{name}", "public/runtime.#{name}") }
   FileUtils.cp("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "public/test-font.ttf")
   puts "Built public/preflight.wasm (#{File.size('public/preflight.wasm')} bytes)"
 end

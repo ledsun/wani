@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build:loader": "ruby scripts/build_loader.rb",
     "build": "bundle exec ruby scripts/build.rb",
     "serve": "node scripts/serve.mjs",
     "test": "playwright test"

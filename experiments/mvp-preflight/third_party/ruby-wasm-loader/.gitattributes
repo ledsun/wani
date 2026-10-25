@@ -1,0 +1,2 @@
+# Preserve the upstream Rollup JSON plugin output byte-for-byte.
+browser.script.iife.js whitespace=-space-before-tab
