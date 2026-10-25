@@ -1,0 +1,5 @@
+source "https://rubygems.org"
+
+gem "kramdown", "2.5.2"
+gem "ruby_wasm", "2.10.1"
+gem "kramdown-parser-gfm", "1.1.0"

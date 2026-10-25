@@ -1,0 +1,7 @@
+<!doctype html><html><meta charset="utf-8"><title>Unmodified loader probe</title>
+<p id="status">loading</p>
+<script src="runtime.original.js"></script>
+<script type="text/ruby" data-eval="async">
+require "js"
+JS.global[:document].getElementById("status")[:textContent] = "stock runtime ready"
+</script></html>

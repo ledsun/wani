@@ -1,0 +1,17 @@
+{
+  "name": "mvp-preflight-experiment",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bundle exec ruby scripts/build.rb",
+    "serve": "node scripts/serve.mjs",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@ruby/4.0-wasm-wasi": "2.10.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "pdfjs-dist": "6.4.299"
+  }
+}

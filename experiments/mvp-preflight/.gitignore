@@ -1,0 +1,9 @@
+.bundle/
+vendor/
+node_modules/
+public/*.wasm
+public/browser.umd.js
+test-results/
+playwright-report/
+public/runtime.*
+public/test-font.ttf

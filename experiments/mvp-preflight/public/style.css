@@ -1,0 +1,23 @@
+@font-face { font-family: Preflight; src: url(test-font.ttf); }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Preflight, sans-serif; background: #ddd; }
+nav { padding: 8px; }
+#viewport { width: 100vw; height: 70vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#stage { flex: 0 0 1920px; transform-origin: center; }
+.slide { width: 1920px; height: 1080px; padding: 48px; display: flex; flex-direction: column; overflow: hidden; background: white; }
+.title { margin: 0 0 24px; white-space: nowrap; flex: 0 0 140px; overflow: hidden; }
+.body { flex: 1 1 0; min-height: 0; overflow: hidden; }
+.body p { margin: 0 0 .3em; }
+.body img { display: block; max-width: 100%; max-height: 320px; width: auto; height: auto; object-fit: contain; }
+.footer { flex: 0 0 48px; font-size: 24px; }
+#stage .slide:not(.active) { display: none; }
+#print-pages { display: none; }
+@page { size: 320mm 180mm; margin: 0; }
+@media print {
+  body { margin: 0; background: white; }
+  body > :not(#print-pages) { display: none !important; }
+  #print-pages { display: block; }
+  .print-sheet { width: 320mm; height: 180mm; overflow: hidden; break-after: page; position: relative; }
+  .print-sheet:last-child { break-after: auto; }
+  .print-sheet .slide { position: absolute; left: 0; top: 0; zoom: 0.6299212598; transform: none; break-inside: avoid; }
+}

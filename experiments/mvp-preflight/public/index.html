@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<title>MVP preflight</title>
+<link rel="stylesheet" href="style.css">
+<p id="status" role="status">Loading Ruby…</p>
+<nav>
+<button id="previous">Previous</button><button id="next">Next</button>
+<button id="fullscreen">Fullscreen</button><button id="exit-fullscreen">Exit fullscreen</button>
+<button id="speaker">Speaker notes</button>
+<button id="print">Print</button><button id="print-notes">Print with notes</button>
+<output id="position"></output>
+</nav>
+<div id="viewport"><main id="stage"></main></div>
+<pre id="warnings" role="status"></pre>
+<details><summary>Parser result</summary><pre id="model"></pre></details>
+<article id="print-pages"></article>
+<script src="runtime.local.js"></script>
+<script type="text/ruby" data-eval="async" src="bootstrap.rb"></script>
+</html>
