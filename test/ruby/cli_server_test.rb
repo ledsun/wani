@@ -29,7 +29,7 @@ class CLIServerTest < Minitest::Test
 
   def test_generated_sample_has_valid_slides_and_a_served_image
     assert_equal 0, @cli.run(["check", File.join(@talk, "slides.md")])
-    assert_includes @out.string, "8 slides; 0 diagnostics"
+    assert_includes @out.string, "10 slides; 0 diagnostics"
     status, headers, body = @application.call("/talk/images/workflow.svg")
     assert_equal 200, status
     assert_includes headers["Content-Type"], "image/svg+xml"

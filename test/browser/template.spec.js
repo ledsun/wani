@@ -13,7 +13,7 @@ test('new presentation renders all sample pages and its bundled image without wa
     await page.route('**/talk/images/workflow.svg', route => route.fulfill({ path: join(talk, 'images/workflow.svg'), contentType: 'image/svg+xml' }));
     await page.goto('/');
     await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
-    await expect(page.locator('#stage > .slide')).toHaveCount(8);
+    await expect(page.locator('#stage > .slide')).toHaveCount(10);
     await expect(page.locator('#warnings')).toBeHidden();
     const slides = page.locator('#stage > .slide');
     await expect(slides.nth(1).locator('strong')).toHaveText('いちばん伝えたいこと');
@@ -27,8 +27,21 @@ test('new presentation renders all sample pages and its bundled image without wa
     await expect(image).toBeVisible();
     expect(await image.evaluate(node => node.complete && node.naturalWidth > 0)).toBe(true);
     await page.screenshot({ path: info.outputPath('sample-image.png') });
+    await page.keyboard.press('ArrowRight');
+    await expect(slides.nth(7).locator('pre code')).toContainText('<!-- notes:');
+    await expect(slides.nth(7).locator('.body')).not.toContainText('これは発表者向けの補足です');
+    const opened = page.waitForEvent('popup');
+    await page.keyboard.press('n');
+    const speaker = await opened;
+    await expect(speaker.locator('#notes strong')).toHaveText('デモの前に');
+    await expect(speaker.locator('#notes')).toContainText('これは発表者向けの補足です');
+    await page.keyboard.press('ArrowRight');
+    await expect(slides.nth(8).locator('pre code')).toContainText('<!-- page-footnote:');
+    await expect(slides.nth(8).locator('.page-footnote')).toHaveText('出典：Wani サンプル資料');
+    await expect(speaker.locator('#page-footnote')).toHaveText('出典：Wani サンプル資料');
+    await speaker.close();
     await page.locator('#print-notes').click();
-    await expect(page.locator('#print-pages > .print-sheet')).toHaveCount(16);
+    await expect(page.locator('#print-pages > .print-sheet')).toHaveCount(20);
     await expect(page.locator('#warnings')).toBeHidden();
   } finally {
     rmSync(directory, { recursive: true, force: true });
