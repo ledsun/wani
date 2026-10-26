@@ -28,7 +28,8 @@ test('normal and alternating-notes PDFs retain content, images and footer', asyn
   expect(normal).toHaveLength(3);
   expect(normal[0]).toContain('Ruby in your browser');
   expect(normal[0]).toContain('800 × 200 image');
-  normal.forEach(text => expect(text).toContain('Wani test presentation'));
+  expect(normal[0]).toContain('Wani test presentation');
+  normal.slice(1).forEach(text => expect(text).not.toContain('Wani test presentation'));
   expect(normal.join(' ')).not.toContain('Private');
   await expect(page.locator('#print-pages .rabbit-image')).toHaveCount(3);
   await page.locator('#print-notes').click();

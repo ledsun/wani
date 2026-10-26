@@ -1,7 +1,3 @@
----
-footer: Wani Presentation
----
-
 # はじめての Wani
 
 Ruby と Markdown でプレゼンテーション。

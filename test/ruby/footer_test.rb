@@ -6,11 +6,11 @@ class FooterTest < Minitest::Test
     Wani::Core::Parser.new.parse(source)
   end
 
-  def test_default_override_empty_and_reset_to_default
+  def test_only_page_footers_are_used
     source = "---\nfooter: Default\n---\n# One\n\n---\n\n# Two\n\n<!-- footer: Specific -->\n\n---\n\n# Three\n\n<!-- footer: -->\n\n---\n\n# Four"
     document = parse(source)
-    assert_equal %w[Default Specific] + ["", "Default"], document.slides.map(&:footer)
-    assert_equal "Default", document.footer
+    assert_equal ["", "Specific", "", ""], document.slides.map(&:footer)
+    refute_includes document.to_h.keys, :footer
     refute_includes document.slides[1].html, "Specific"
     assert_empty document.diagnostics
   end

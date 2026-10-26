@@ -1,7 +1,6 @@
----
-footer: Wani test presentation
----
 # Ruby in your browser
+
+<!-- footer: Wani test presentation -->
 
 **Wani** renders Markdown using Ruby.
 

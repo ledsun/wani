@@ -34,11 +34,11 @@ module Wani
           renderer = SafeHTML.new(&warn)
           note_roots = notes.map { |text| markdown(text).root }
           Slide.new(number: number, title: title ? plain(title) : "", html: renderer.render(document.root),
-            footer: footers.empty? ? config.fetch("footer", "") : footers.last.strip,
+            footer: footers.empty? ? "" : footers.last.strip,
             notes_html: note_roots.map { |root| renderer.render(root) }.join,
             images: ([document.root] + note_roots).flat_map { |root| walk(root).select { |node| node.type == :img && SafeHTML.safe_url?(node.attr['src'], image: true) }.map { |node| node.attr['src'] } }.uniq)
         end
-        Presentation.new(slides: slides, footer: config.fetch("footer", ""), decorations: config.fetch("decorations", true), time_limit: config.fetch("time_limit", 5), diagnostics: diagnostics.uniq { |item| item.to_h })
+        Presentation.new(slides: slides, decorations: config.fetch("decorations", true), time_limit: config.fetch("time_limit", 5), diagnostics: diagnostics.uniq { |item| item.to_h })
       rescue Encoding::CompatibilityError, ArgumentError => error
         raise Error, "Invalid Markdown: #{error.message}"
       end
@@ -51,7 +51,6 @@ module Wani
         raise Error, "Unclosed Front Matter" unless ending
         config = YAML.safe_load(lines[1...ending].join, permitted_classes: [], permitted_symbols: [], aliases: false) || {}
         raise Error, "Front Matter must be a mapping" unless config.is_a?(Hash)
-        raise Error, "footer must be a string" if config.key?("footer") && !config["footer"].is_a?(String)
         raise Error, "decorations must be true or false" if config.key?("decorations") && ![true, false].include?(config["decorations"])
         if config.key?("time_limit")
           limit = config["time_limit"]

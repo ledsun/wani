@@ -24,11 +24,11 @@ async function pdfText(buffer) {
   }
 }
 
-test('page footer overrides default and page count stays to the right of the bridge', async ({ page }, info) => {
+test('only page footers appear and page count stays to the right of the bridge', async ({ page }, info) => {
   await ready(page);
   const footer = page.locator('.slide.active .footer-text');
   const count = page.locator('.slide.active .slide-number');
-  await expect(footer).toHaveText('Shared footer');
+  await expect(footer).toHaveText('');
   await expect(count).toHaveText('1/4');
   await page.keyboard.press('ArrowRight');
   await expect(footer).toHaveText('<b>Specific footer</b>');
@@ -48,7 +48,7 @@ test('page footer overrides default and page count stays to the right of the bri
   await expect(speaker.locator('#footer')).toHaveText('');
   await expect(count).toHaveText('3/4');
   await page.keyboard.press('End');
-  await expect(footer).toHaveText('Shared footer');
+  await expect(footer).toHaveText('');
   await expect(count).toHaveText('4/4');
   await speaker.close();
 });
@@ -66,12 +66,12 @@ test('print and notes use each footer and logical slide number', async ({ page }
   await page.locator('#print-notes').click();
   await expect(page.locator('#status')).toContainText('8 ページ');
   await expect(page.locator('#print-pages .footer-text')).toHaveText([
-    'Shared footer', 'Shared footer', '<b>Specific footer</b>', '<b>Specific footer</b>', '', '', 'Shared footer', 'Shared footer',
+    '', '', '<b>Specific footer</b>', '<b>Specific footer</b>', '', '', '', '',
   ]);
   await expect(page.locator('#print-pages .slide-number')).toHaveText(['1/4', '1/4', '2/4', '2/4', '3/4', '3/4', '4/4', '4/4']);
   const texts = await pdfText(await page.pdf({ preferCSSPageSize: true, printBackground: true, path: info.outputPath('footers.pdf') }));
   expect(texts).toHaveLength(8);
-  expect(texts[0]).toContain('Shared footer');
+  texts.forEach(text => expect(text).not.toContain('Shared footer'));
   expect(texts[2]).toContain('Specific footer');
   expect(texts[4]).not.toMatch(/Shared footer|Specific footer/);
   texts.forEach((text, index) => expect(text).toContain(`${Math.floor(index / 2) + 1}/4`));

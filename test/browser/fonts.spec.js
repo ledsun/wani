@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
-const source = '---\nfooter: 日本語フッター\n---\n# 日本語プレゼンテーション\n\n漢字・ひらがな・カタカナと English 123。\n\n**太字の本文**も同じフォントです。\n\n<!-- notes: 日本語の発表者ノート。 -->';
+const source = '<!-- footer: 日本語フッター -->\n\n# 日本語プレゼンテーション\n\n漢字・ひらがな・カタカナと English 123。\n\n**太字の本文**も同じフォントです。\n\n<!-- notes: 日本語の発表者ノート。 -->';
 
 async function ready(page) {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: source, contentType: 'text/plain; charset=utf-8' }));

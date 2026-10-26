@@ -18,8 +18,8 @@ class CoreTest < Minitest::Test
   end
 
   def test_metadata_titles_notes_and_footer
-    document = parse("---\nfooter: Footer\ndecorations: false\n---\n# **One** &amp; two\n\nBody\n\n<!--\nnotes:\nPrivate **note**\n-->\n\n---\n\n###### Last")
-    assert_equal "Footer", document.footer
+    document = parse("---\ndecorations: false\n---\n# **One** &amp; two\n\n<!-- footer: Footer -->\n\nBody\n\n<!--\nnotes:\nPrivate **note**\n-->\n\n---\n\n###### Last")
+    assert_equal "Footer", document.slides[0].footer
     refute document.decorations
     assert_equal ["One & two", "Last"], document.slides.map(&:title)
     assert_includes document.slides[0].notes_html, "<strong>note</strong>"
@@ -36,7 +36,7 @@ class CoreTest < Minitest::Test
   end
 
   def test_unsafe_yaml_and_unclosed_structures_are_rejected
-    ["---\nfooter: !ruby/object:Object {}\n---", "---\na: &a x\nfooter: *a\n---", "---\nfooter: [broken\n---", "---\nfooter: []\n---", "---\nfooter: x", "# Title\n\n<!--\nnotes: never closed", "#\n"].each do |source|
+    ["---\nfooter: !ruby/object:Object {}\n---", "---\na: &a x\nfooter: *a\n---", "---\nfooter: [broken\n---", "---\nfooter: x", "# Title\n\n<!--\nnotes: never closed", "#\n"].each do |source|
       assert_raises(Wani::Core::Parser::Error) { parse(source) }
     end
   end
