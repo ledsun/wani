@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 const source = ['# Start', '# Bridge', '# Crossing', '# Finish'].join('\n\n---\n\n');
 
-async function ready(page) {
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: source }));
+async function ready(page, markdown = source) {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: markdown }));
   await page.goto('/');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
 }
@@ -18,9 +18,9 @@ async function rabbitFraction(page) {
 test('wanis build from the right, then rabbit crosses left to right and reverses', async ({ page }, info) => {
   await ready(page);
   const scene = page.locator('.slide.active .decorations');
-  await expect(scene.locator('.bridge-segment[data-present="true"]')).toHaveCount(10);
+  await expect(scene.locator('.bridge-segment[data-present="true"]')).toHaveCount(1);
   expect(await scene.locator('.bridge-segment').evaluateAll(nodes => nodes.map(node => node.dataset.present))).toEqual([
-    ...Array(10).fill('false'), ...Array(10).fill('true'),
+    ...Array(19).fill('false'), 'true',
   ]);
   await expect.poll(() => rabbitFraction(page)).toBeCloseTo(0, 2);
   await page.keyboard.press('ArrowRight');
@@ -43,7 +43,7 @@ test('wanis build from the right, then rabbit crosses left to right and reverses
   await expect.poll(() => rabbitFraction(page)).toBeCloseTo(0.5, 2);
   await page.keyboard.press('Home');
   await expect.poll(() => rabbitFraction(page)).toBeCloseTo(0, 2);
-  await expect(scene.locator('.bridge-segment[data-present="true"]')).toHaveCount(10);
+  await expect(scene.locator('.bridge-segment[data-present="true"]')).toHaveCount(1);
 });
 
 test('print and notes retain each slide progress without animation', async ({ page }) => {
@@ -57,7 +57,7 @@ test('print and notes retain each slide progress without animation', async ({ pa
     animation: getComputedStyle(scene.querySelector('.rabbit-position')).animationName,
     fraction: parseFloat(getComputedStyle(scene.querySelector('.rabbit-position')).left) / (scene.clientWidth - 84),
   })));
-  expect(states.map(state => state.sharks)).toEqual([10, 10, 20, 20, 20, 20, 20, 20]);
+  expect(states.map(state => state.sharks)).toEqual([1, 1, 20, 20, 20, 20, 20, 20]);
   expect(states.map(state => state.rabbit)).toEqual([0, 0, 0, 0, 0.5, 0.5, 1, 1]);
   states.forEach(state => {
     expect(state.animation).toBe('none');
@@ -71,4 +71,10 @@ test('reduced motion leaves the rabbit at the correct position', async ({ page }
   await page.keyboard.press('End');
   await expect.poll(() => rabbitFraction(page)).toBeCloseTo(1, 2);
   await expect(page.locator('.slide.active .rabbit-position')).toHaveCSS('animation-name', 'none');
+});
+
+test('a single-slide presentation also starts and prints with one wani', async ({ page }) => {
+  await ready(page, '# Only slide');
+  await expect(page.locator('.slide.active .bridge-segment[data-present="true"]')).toHaveCount(1);
+  await expect(page.locator('#print-pages .bridge-segment[data-present="true"]')).toHaveCount(1);
 });

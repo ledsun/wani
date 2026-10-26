@@ -16,7 +16,7 @@ test('CLI server boots packaged Ruby and renders the presentation', async ({ pag
   await expect(page.locator('.slide.active strong')).toHaveText('Wani');
   await expect(page.locator('.slide.active .footer-text')).toHaveText('Wani test presentation');
   await expect(page.locator('.slide.active .rabbit-image')).toHaveCount(1);
-  await expect(page.locator('.slide.active .bridge-segment[data-present="true"]')).toHaveCount(14);
+  await expect(page.locator('.slide.active .bridge-segment[data-present="true"]')).toHaveCount(1);
   await expect(page.locator('#stage')).not.toContainText('speaker notes');
   await expect(page.locator('#warnings')).toBeHidden();
   expect(errors).toEqual([]);

@@ -7,18 +7,24 @@ class BridgeProgressTest < Minitest::Test
   end
 
   def test_bridge_builds_before_rabbit_crosses
-    assert_equal [0, 10, 20, 20, 20], (0..4).map { |number| state(number, 4).sharks }
+    assert_equal [0, 1, 20, 20, 20], (0..4).map { |number| state(number, 4).sharks }
     assert_equal [0, 0, 0, 0.5, 1.0], (0..4).map { |number| state(number, 4).rabbit_fraction }
   end
 
   def test_odd_slide_count_and_single_slide_finish_at_right_edge
-    assert_equal 16, state(2, 5).sharks
+    assert_equal 11, state(2, 5).sharks
     assert_equal 0, state(2, 5).rabbit_fraction
     assert_equal 20, state(3, 5).sharks
     assert_in_delta 0.2, state(3, 5).rabbit_fraction
     assert_equal 1.0, state(5, 5).rabbit_fraction
-    assert_equal 20, state(1, 1).sharks
+    assert_equal 1, state(1, 1).sharks
     assert_equal 1.0, state(1, 1).rabbit_fraction
+  end
+
+  def test_first_slide_is_always_one_wani
+    [1, 2, 3, 4, 5, 10, 100].each do |total|
+      assert_equal 1, state(1, total).sharks, "#{total} slides"
+    end
   end
 
   def test_out_of_range_indices_are_clamped
