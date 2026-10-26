@@ -132,7 +132,7 @@ module Wani
             document.getElementById("current")[:textContent] = state.fetch("title")
             document.getElementById("body")[:innerHTML] = state.fetch("html")
             document.getElementById("notes")[:innerHTML] = state.fetch("notes_html")
-            document.getElementById("footer")[:textContent] = @presentation.footer
+            document.getElementById("footer")[:textContent] = state.fetch("footer")
             @renderer.resolve_links(document.getElementById("body"))
             @renderer.resolve_links(document.getElementById("notes"))
           end
@@ -143,7 +143,7 @@ module Wani
       def sync_speaker
         return unless @speaker && @speaker[:closed] == JS::False
         slide = @presentation.slides[@index]
-        @speaker.postMessage(JSON.generate({ position: "#{@index + 1} / #{@sections.length}", title: slide.title, html: slide.html, notes_html: slide.notes_html }), JS.global[:location][:origin])
+        @speaker.postMessage(JSON.generate({ position: "#{@index + 1} / #{@sections.length}", title: slide.title, html: slide.html, notes_html: slide.notes_html, footer: slide.footer }), JS.global[:location][:origin])
       end
 
       def prepare_pages(notes)

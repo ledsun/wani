@@ -18,7 +18,10 @@ module Wani
         body[:innerHTML] = notes ? slide.notes_html : slide.html
         resolve_links(body)
         footer = child(section, "footer", "slide-footer")
-        child(footer, "span", "footer-text")[:textContent] = @presentation.footer
+        child(footer, "span", "footer-text")[:textContent] = slide.footer
+        number = child(footer, "span", "slide-number")
+        number[:textContent] = "#{slide.number}/#{@presentation.slides.length}"
+        number.setAttribute("aria-label", "#{@presentation.slides.length} ページ中 #{slide.number} ページ")
         if @presentation.decorations
           progress = BridgeProgress.new(slide.number, @presentation.slides.length)
           decorations = child(footer, "span", "decorations")

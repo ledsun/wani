@@ -17,6 +17,8 @@ Ruby と Markdown でプレゼンテーション。
 
 ---
 
+<!-- footer: Ruby とブラウザーの世界へ -->
+
 ## Ruby on WebAssembly
 
 ブラウザーの中で Ruby がスライドを描画します。
