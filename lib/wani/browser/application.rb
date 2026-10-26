@@ -3,6 +3,7 @@ require "json"
 require_relative "../core/parser"
 require_relative "layout"
 require_relative "renderer"
+require_relative "presentation_timer"
 
 module Wani
   module Browser
@@ -26,6 +27,7 @@ module Wani
         go(hash_index)
         %w[previous next fullscreen speaker print print-notes].each { |id| element(id)[:disabled] = false }
         update_buttons
+        start_timer
         element("status")[:textContent] = "準備できました"
       end
 
@@ -84,6 +86,12 @@ module Wani
       end
 
       def go(index)
+        if @time_expired
+          @time_expired = false
+          element("time-expired")[:hidden] = true
+          element("viewport")[:inert] = false
+          index = @index
+        end
         previous_number = @active_number || 0
         @index = index.clamp(0, @sections.length - 1)
         @renderer.transition(@sections[@index], previous_number)
@@ -98,8 +106,8 @@ module Wani
       end
 
       def update_buttons
-        element("previous")[:disabled] = @index.zero?
-        element("next")[:disabled] = @index == @sections.length - 1
+        element("previous")[:disabled] = @index.zero? && !@time_expired
+        element("next")[:disabled] = @index == @sections.length - 1 && !@time_expired
       end
 
       def fullscreen

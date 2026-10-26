@@ -25,7 +25,7 @@ npm ci
 bundle exec rake build:wasm
 
 gem build wani.gemspec
-gem install ./wani-0.1.5.gem
+gem install ./wani-0.1.6.gem
 
 wani new my-talk
 cd my-talk
@@ -67,6 +67,7 @@ PNG / JPEG / WebP / SVG に対応します。HTTP(S)画像も表示できます�
 ---
 footer: WANI Presentation
 decorations: true
+time_limit: 5
 ---
 
 # Ruby on WebAssembly
@@ -150,6 +151,19 @@ Ctrl+P でも印刷できます。
 ページを戻すと位置と橋も戻り、最終ページで兎が右端に到着します。
 印刷・ノート付きPDFでは各ページの到達位置を静止表示し、動きを減らす設定にも対応します。
 装飾を無効にする場合は `decorations: false` を指定してください。
+
+## 発表タイマー
+
+スライドの読み込み完了から計測し、既定では5分で時間切れ画面を表示します。
+Front Matter の `time_limit` に分数を指定して変更できます（小数も可）。
+`time_limit: 0` でタイマーを無効にします。
+
+残り30秒になると、全画面表示中もカウントダウンを表示します。
+時間切れになると、兎柄フードをくわえたワニ（さめ）の画像を表示します。
+左右キーまたは「スライドに戻る」ボタンで、時間切れ直前のスライドに戻れます。
+戻った後は通常通りページを移動でき、時間切れ画面は再表示しません。
+最終スライドでも計測は続きます。ページを再読み込みするとタイマーも最初から始まります。
+タイマーと時間切れ画面はPDFには含めません。
 
 ## 同梱フォント
 

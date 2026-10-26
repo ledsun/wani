@@ -38,7 +38,7 @@ module Wani
             notes_html: note_roots.map { |root| renderer.render(root) }.join,
             images: ([document.root] + note_roots).flat_map { |root| walk(root).select { |node| node.type == :img && SafeHTML.safe_url?(node.attr['src'], image: true) }.map { |node| node.attr['src'] } }.uniq)
         end
-        Presentation.new(slides: slides, footer: config.fetch("footer", ""), decorations: config.fetch("decorations", true), diagnostics: diagnostics.uniq { |item| item.to_h })
+        Presentation.new(slides: slides, footer: config.fetch("footer", ""), decorations: config.fetch("decorations", true), time_limit: config.fetch("time_limit", 5), diagnostics: diagnostics.uniq { |item| item.to_h })
       rescue Encoding::CompatibilityError, ArgumentError => error
         raise Error, "Invalid Markdown: #{error.message}"
       end
@@ -53,6 +53,10 @@ module Wani
         raise Error, "Front Matter must be a mapping" unless config.is_a?(Hash)
         raise Error, "footer must be a string" if config.key?("footer") && !config["footer"].is_a?(String)
         raise Error, "decorations must be true or false" if config.key?("decorations") && ![true, false].include?(config["decorations"])
+        if config.key?("time_limit")
+          limit = config["time_limit"]
+          raise Error, "time_limit must be a finite non-negative number of minutes" unless limit.is_a?(Numeric) && limit.finite? && limit >= 0 && (limit * 60_000).finite?
+        end
         [config, lines[(ending + 1)..]]
       rescue Psych::Exception
         raise Error, "Invalid or unsafe YAML in Front Matter"

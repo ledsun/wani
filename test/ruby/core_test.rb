@@ -7,6 +7,16 @@ class CoreTest < Minitest::Test
     Wani::Core::Parser.new.parse(source)
   end
 
+  def test_time_limit_defaults_and_validates_minutes
+    assert_equal 5, parse("# Default").time_limit
+    [0, 1, 2.5].each do |limit|
+      assert_equal limit, parse("---\ntime_limit: #{limit}\n---\n# Timer").time_limit
+    end
+    ['-1', 'true', '"5"', '.inf', '.nan', '[]'].each do |limit|
+      assert_raises(Wani::Core::Parser::Error) { parse("---\ntime_limit: #{limit}\n---\n# Invalid") }
+    end
+  end
+
   def test_metadata_titles_notes_and_footer
     document = parse("---\nfooter: Footer\ndecorations: false\n---\n# **One** &amp; two\n\nBody\n\n<!--\nnotes:\nPrivate **note**\n-->\n\n---\n\n###### Last")
     assert_equal "Footer", document.footer
