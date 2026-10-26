@@ -3,6 +3,15 @@
 Markdown からスライドを作り、ブラウザー内の Ruby でプレゼンテーションするツールです。
 Rabbit へのオマージュとして、因幡の白兎に登場するワニ（鮫）にちなんだ名前です。
 
+<p align="center">
+  <img src="docs/images/wani-characters.png" alt="ノートパソコンを使う兎と、それを見守るワニ" width="640">
+</p>
+
+<p align="center">
+  <img src="docs/images/rabbit.png" alt="ノートパソコンを持った兎" width="240">
+  <img src="docs/images/wani.png" alt="笑顔のワニ" width="240">
+</p>
+
 ## インストールと開始
 
 現在はソースから gem をビルドして利用します。RubyGems.org への公開は行っていません。
