@@ -2,6 +2,7 @@ require "yaml"
 require "kramdown"
 require "kramdown-parser-gfm"
 require_relative "presentation"
+require_relative "fonts"
 require_relative "safe_html"
 
 module Wani
@@ -38,7 +39,7 @@ module Wani
             notes_html: note_roots.map { |root| renderer.render(root) }.join,
             images: ([document.root] + note_roots).flat_map { |root| walk(root).select { |node| node.type == :img && SafeHTML.safe_url?(node.attr['src'], image: true) }.map { |node| node.attr['src'] } }.uniq)
         end
-        Presentation.new(slides: slides, time_limit: config.fetch("time_limit", 5), diagnostics: diagnostics.uniq { |item| item.to_h })
+        Presentation.new(fonts: Fonts.settings(config["font"]), slides: slides, time_limit: config.fetch("time_limit", 5), diagnostics: diagnostics.uniq { |item| item.to_h })
       rescue Encoding::CompatibilityError, ArgumentError => error
         raise Error, "Invalid Markdown: #{error.message}"
       end

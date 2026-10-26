@@ -4,8 +4,9 @@ require_relative "../wani"
 
 module Wani
   class CLI
-    def initialize(out: $stdout, err: $stderr)
+    def initialize(out: $stdout, err: $stderr, font_manager: nil)
       @out, @err = out, err
+      @font_manager = font_manager
     end
 
     def run(arguments)
@@ -13,10 +14,11 @@ module Wani
       command = args.shift
       case command
       when "new" then create(args)
+      when "font" then font(args)
       when "serve" then serve(args)
       when "check" then check(args)
       when "--version", "-v" then @out.puts(VERSION); 0
-      when nil, "--help", "-h", "help" then @out.puts("Usage: wani new DIRECTORY | serve [FILE] [--bind ADDRESS] [--port PORT] | check [FILE]"); 0
+      when nil, "--help", "-h", "help" then @out.puts("Usage: wani new DIRECTORY | serve [FILE] [--bind ADDRESS] [--port PORT] | check [FILE] | font add SOURCE | font list | font remove ID"); 0
       else raise ArgumentError, "Unknown command: #{command}"
       end
     rescue ArgumentError, OptionParser::ParseError, SystemCallError => error
@@ -25,6 +27,34 @@ module Wani
     end
 
     private
+
+    def font(args)
+      require_relative "fonts/manager"
+      manager = @font_manager || Fonts::Manager.new
+      action = args.shift
+      case action
+      when "add"
+        raise ArgumentError, "Usage: wani font add SOURCE" unless args.length == 1
+        entry = manager.add(args.first)
+        @out.puts "Installed #{entry['family']} (#{entry['version']}); set font in Markdown to apply it."
+      when "list"
+        raise ArgumentError, "Usage: wani font list" unless args.empty?
+        @out.puts "ID\tFamily\tVersion\tVariable"
+        manager.list.each { |id, entry| @out.puts [id, entry['family'], entry['version'], entry['variable']].join("\t") }
+      when "remove"
+        raise ArgumentError, "Usage: wani font remove ID" unless args.length == 1
+        manager.remove(args.first, confirm: ->(files) {
+          @err.puts "Warning: font is used by #{files.join(', ')}"
+          next false unless $stdin.tty?
+          @err.print "Remove this font? [y/N] "
+          $stdin.gets&.strip&.downcase == "y"
+        })
+        @out.puts "Removed #{args.first}"
+      else
+        raise ArgumentError, "Usage: wani font add SOURCE | list | remove ID"
+      end
+      0
+    end
 
     def create(args)
       raise ArgumentError, "Usage: wani new DIRECTORY" unless args.length == 1
@@ -59,6 +89,12 @@ module Wani
       file = File.expand_path(args.first || "slides.md")
       presentation = Core::Parser.new.parse(File.read(file, encoding: "UTF-8"))
       issues = Core::Validator.new.validate(presentation, base_dir: File.dirname(file))
+      if (name = presentation.fonts["default"])
+        require_relative "fonts/manager"
+        unless Core::Fonts.resolve(Fonts::Manager.new(File.dirname(file)).list, name)
+          issues << Core::Diagnostic.new(severity: :warning, message: "Unregistered font: #{name}; using fallback")
+        end
+      end
       issues.each { |issue| @out.puts "#{issue.severity}: #{issue.slide ? "slide #{issue.slide}: " : ""}#{issue.message}" }
       @out.puts "#{presentation.slides.length} slides; #{issues.length} diagnostics"
       issues.any? { |issue| issue.severity == :error } ? 1 : 0

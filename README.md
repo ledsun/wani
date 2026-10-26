@@ -170,3 +170,45 @@ WSL2 内で `wani serve` を起動した場合は、Windows 側のブラウザ�
 
 - [アーキテクチャ](docs/architecture.md)：共通モジュール、静的配信、wasm・ローダー、フォント、レイアウトの設計
 - [開発・検証](docs/development.md)：ビルド、テスト、パッケージ作成、手動検証の手順
+
+### Fontsourceのフォントを使う
+
+[Fontsource](https://fontsource.org/fonts)でフォントを検索・プレビューし、プレゼンテーションのディレクトリでインストールします。取得・管理はRuby CLIで行い、利用者の環境にNode.jsやnpmは不要です。
+
+```sh
+wani font add "Noto Sans JP"
+# フォントIDまたは公式ページURLも指定できます
+wani font add https://fontsource.org/fonts/jetbrains-mono
+wani font list
+wani font remove jetbrains-mono
+```
+
+インストールだけではMarkdownを変更しません。`slides.md`のFront Matterに指定すると、タイトルと本文に適用されます（コードの等幅フォントは従来どおりです）。
+
+```yaml
+---
+font: Noto Sans JP
+---
+```
+
+フォントは`fonts/ID/`、登録情報は`.wani/fonts.yml`に保存します。この両方をプロジェクトと一緒に保存・配布してください。登録情報には確定した配布バージョン、ライセンス種別、管理ファイル一覧とSHA-256を記録します。Variable版を優先し、通常版は利用可能な400・700を取得します。両方がない場合はエラーになります。利用可能なnormal・italicと、CSSが参照する全言語サブセットを保存するため、日本語フォントではファイル数が多くなります。
+
+インストール後は外部CDNへの接続なしで、`wani serve`によるローカル配信とPDF出力ができます。ruby.wasmがCSSを登録し、全スライド・ノートの文字についてFont Loading APIで読み込みを待ってからサイズ計算します。未登録・読み込み失敗時は画面に警告し、既定フォントで描画します。PDFは準備完了後に印刷ボタンから出力してください。
+
+同名フォントや既存ディレクトリは上書きしません。使用中フォントの削除には対話端末で確認が必要です。非対話実行では削除を拒否します。管理ファイルが変更されている場合も削除を拒否し、管理外のファイルは残します。自動更新、ローカルフォントのインポート、独自検索・プレビューUIはありません。
+
+各フォントの実際のライセンスを`fonts/ID/LICENSE`に保存します。**Web公開・再配布・PDF配布時には、そのフォントのライセンス条件を確認してください。** すべてのフォントが同じライセンスとは限りません。
+
+取得仕様の根拠: [Fonts API](https://fontsource.org/docs/api/fonts)、[配布バージョンAPI](https://fontsource.org/docs/api/version)、[公式配布・手動取得](https://fontsource.org/docs/getting-started/install)、[Variable CSS](https://fontsource.org/docs/getting-started/variable)、[公式CDN](https://fontsource.org/docs/getting-started/cdn)。CLIは公開APIとjsDelivrの固定バージョンの公式`@fontsource` / `@fontsource-variable`パッケージを直接HTTP取得します。通信は接続10秒・読み取り20秒・リクエスト全体60秒、単一ファイル32MiB・インストール合計256MiBを上限とします。
+
+通常のテストは外部APIをモックします。実サービスとの統合確認は明示的に別実行します（指定先は新しいディレクトリにしてください）。
+
+```sh
+bundle exec rake test
+bundle exec rake build:wasm
+npx playwright test
+bundle exec ruby test/integration/fontsource.rb /tmp/wani-fontsource-demo
+WANI_FONTSOURCE_PROJECT=/tmp/wani-fontsource-demo npx playwright test test/browser/fontsource.spec.js
+```
+
+ビルド・ブラウザーテスト用のNode.js依存は従来どおり開発環境だけで使用します。必要に応じて`CHROMIUM_PATH`で既存のChrome/Chromiumを指定できます。

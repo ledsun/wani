@@ -3,6 +3,7 @@ require "json"
 require_relative "../core/parser"
 require_relative "layout"
 require_relative "renderer"
+require_relative "fonts"
 require_relative "presentation_timer"
 
 module Wani
@@ -20,6 +21,8 @@ module Wani
         @renderer = Renderer.new(@document, @presentation)
         @sections = @presentation.slides.map { |slide| @renderer.slide(slide) }
         @sections.each { |section| element("stage").appendChild(section) }
+        font_sections = @sections + @presentation.slides.map { |slide| @renderer.slide(slide, notes: true) }
+        Fonts.new(@document) { |message| warn(message) }.apply(@presentation.fonts, font_sections)
         @layout.wait_assets(element("stage"))
         @sections.each_with_index { |section, index| @layout.fit_slide(section, index + 1) }
         prepare_pages(false)

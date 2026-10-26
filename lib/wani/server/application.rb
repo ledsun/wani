@@ -1,4 +1,6 @@
 require "uri"
+require "json"
+require_relative "../fonts/manager"
 require_relative "../../wani"
 
 module Wani
@@ -19,12 +21,17 @@ module Wani
 
       def call(raw_path)
         path = decode(raw_path)
+        if path == "/talk/fonts.json"
+          return [200, { "Content-Type" => "application/json", "Cache-Control" => "no-store" }, JSON.generate(Fonts::Manager.new(@root).list)]
+        end
         file = if path == "/"
                  File.join(@assets, "index.html")
                elsif path == "/talk/slides.md"
                  @file
                elsif path.start_with?("/assets/") && ASSETS.include?(path.delete_prefix("/assets/"))
                  contained(@assets, path.delete_prefix("/assets/"))
+               elsif path.start_with?("/talk/fonts/") && Fonts::Manager.new(@root).list.values.any? { |entry| entry.fetch("files").include?(path.delete_prefix("/talk/")) }
+                 contained(@root, path.delete_prefix("/talk/"))
                elsif path.start_with?("/talk/") && IMAGES.include?(File.extname(path).downcase)
                  contained(@root, path.delete_prefix("/talk/"))
                else
