@@ -103,6 +103,7 @@ module Wani
         update_buttons
         @layout.scale
         sync_speaker
+        update_timer_for_slide
       end
 
       def update_buttons

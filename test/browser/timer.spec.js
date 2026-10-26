@@ -10,9 +10,9 @@ async function ready(page, limit) {
   await page.clock.pauseAt(new Date(Date.now() + 100));
 }
 
-test('default five minutes counts down and expires even on the final slide, then resumes once', async ({ page }) => {
+test('default five minutes counts down and expires before the final slide, then resumes once', async ({ page }) => {
   await ready(page);
-  await page.keyboard.press('End');
+  await page.keyboard.press('ArrowRight');
   await expect(page.locator('#countdown')).toBeHidden();
   await page.clock.fastForward(269_000);
   await expect(page.locator('#countdown')).toBeHidden();
@@ -30,9 +30,9 @@ test('default five minutes counts down and expires even on the final slide, then
   await expect(page.locator('#next')).toBeEnabled();
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('#time-expired')).toBeHidden();
-  await expect(page.locator('#position')).toHaveText('3 / 3');
-  await page.keyboard.press('ArrowLeft');
   await expect(page.locator('#position')).toHaveText('2 / 3');
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('#position')).toHaveText('1 / 3');
   await page.clock.fastForward(600_000);
   await expect(page.locator('#time-expired')).toBeHidden();
 });
@@ -114,4 +114,39 @@ test('reduced motion keeps the final countdown readable without scaling', async 
   await page.clock.fastForward(1_100);
   await expect(page.locator('#countdown')).toHaveText('5');
   await expect(page.locator('#countdown span')).toHaveCSS('animation-name', 'none');
+});
+
+
+test('final slide pauses the remaining time and returning resumes it', async ({ page }) => {
+  await ready(page, 0.1);
+  await page.clock.fastForward(1_100);
+  await expect(page.locator('#countdown')).toHaveText('5');
+  await page.keyboard.press('End');
+  await expect(page.locator('#countdown')).toBeHidden();
+  await page.clock.fastForward(60_000);
+  await expect(page.locator('#time-expired')).toBeHidden();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('#countdown')).toBeVisible();
+  await expect(page.locator('#countdown')).toHaveText('5');
+  await page.clock.fastForward(5_000);
+  await expect(page.locator('#time-expired')).toBeVisible();
+});
+
+test('starting on the final slide, including a single slide, never expires', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\ntime_limit: 0.1\n---\n# Only slide' }));
+  await ready(page);
+  await page.clock.fastForward(60_000);
+  await expect(page.locator('#countdown')).toBeHidden();
+  await expect(page.locator('#time-expired')).toBeHidden();
+  await page.unroute('**/talk/slides.md');
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\ntime_limit: 0.1\n---\n# First\n\n---\n\n# Last' }));
+  await page.goto('/?final-slide-test#slide=2');
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  await page.clock.fastForward(60_000);
+  await expect(page.locator('#countdown')).toBeHidden();
+  await expect(page.locator('#time-expired')).toBeHidden();
+  await page.keyboard.press('Home');
+  await expect(page.locator('#countdown')).toBeVisible();
+  await page.clock.fastForward(6_100);
+  await expect(page.locator('#time-expired')).toBeVisible();
 });

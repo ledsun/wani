@@ -12,10 +12,28 @@ module Wani
         @timer_id = JS.global.setInterval(@timer_callback, 200)
         # Check immediately when returning from a background tab, whose timers may be throttled.
         @document.addEventListener("visibilitychange") { tick_timer unless @timer_finished }
-        tick_timer
+        update_timer_for_slide
+      end
+
+      def update_timer_for_slide
+        return unless @deadline && !@timer_finished
+
+        now = JS.global[:Date].now.to_f
+        if @index == @sections.length - 1
+          @timer_paused_at ||= now
+          element("countdown")[:hidden] = true
+        else
+          if @timer_paused_at
+            @deadline += now - @timer_paused_at
+            @timer_paused_at = nil
+          end
+          tick_timer
+        end
       end
 
       def tick_timer
+        return if @timer_paused_at || @timer_finished
+
         remaining = ((@deadline - JS.global[:Date].now.to_f) / 1000).ceil
         countdown = element("countdown")
         countdown[:hidden] = remaining > 30 || remaining <= 0

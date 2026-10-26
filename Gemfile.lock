@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    wani (0.1.7)
+    wani (0.1.8)
       kramdown (= 2.5.2)
       kramdown-parser-gfm (= 1.1.0)
       rexml (= 3.4.4)
@@ -69,7 +69,7 @@ CHECKSUMS
   ruby_wasm (2.10.1-x86_64-darwin) sha256=40291bed5b48c858317a31437e59d56091edda2f2c498b532238eda4cbf044d4
   ruby_wasm (2.10.1-x86_64-linux) sha256=728e29dc688246572b56dcef1c7b131431d07865320c9b8434dd1ccdfd63db2b
   ruby_wasm (2.10.1-x86_64-linux-musl) sha256=c4d16572f9a465e460490d0608e817239c5e0ddfc9553f18db2bcaebecbcdd8d
-  wani (0.1.7)
+  wani (0.1.8)
   webrick (1.9.2) sha256=beb4a15fc474defed24a3bda4ffd88a490d517c9e4e6118c3edce59e45864131
 
 BUNDLED WITH

@@ -18,6 +18,14 @@ async function rabbitFraction(page) {
 test('wanis build from the right, then rabbit crosses left to right and reverses', async ({ page }, info) => {
   await ready(page);
   const scene = page.locator('.slide.active .decorations');
+  await expect(scene.locator('.island')).toHaveCount(2);
+  const starting = await scene.evaluate(scene => {
+    const rabbit = scene.querySelector('.rabbit-position').getBoundingClientRect();
+    const island = scene.querySelector('.island-left').getBoundingClientRect();
+    const bridge = scene.querySelector('.bridge').getBoundingClientRect();
+    return { onIsland: Math.abs(rabbit.x - island.x) < 1 && Math.abs(rabbit.width - island.width) < 1, bridgeAfterIsland: bridge.left >= island.right - 1 };
+  });
+  expect(starting).toEqual({ onIsland: true, bridgeAfterIsland: true });
   await expect(scene.locator('.bridge-segment[data-present="true"]')).toHaveCount(1);
   expect(await scene.locator('.bridge-segment').evaluateAll(nodes => nodes.map(node => node.dataset.present))).toEqual([
     ...Array(19).fill('false'), 'true',
@@ -35,9 +43,10 @@ test('wanis build from the right, then rabbit crosses left to right and reverses
   const positions = await scene.evaluate(scene => {
     const bridge = scene.querySelector('.bridge').getBoundingClientRect();
     const rabbit = scene.querySelector('.rabbit-position').getBoundingClientRect();
-    return { inside: rabbit.left >= bridge.left - 1 && rabbit.right <= bridge.right + 1, above: rabbit.top < bridge.top };
+    const island = scene.querySelector('.island-right').getBoundingClientRect();
+    return { onIsland: Math.abs(rabbit.x - island.x) < 1 && Math.abs(rabbit.width - island.width) < 1, bridgeBeforeIsland: bridge.right <= island.left + 1, above: rabbit.top < island.top };
   });
-  expect(positions).toEqual({ inside: true, above: true });
+  expect(positions).toEqual({ onIsland: true, bridgeBeforeIsland: true, above: true });
   await page.screenshot({ path: info.outputPath('rabbit-finish.png') });
   await page.keyboard.press('ArrowLeft');
   await expect.poll(() => rabbitFraction(page)).toBeCloseTo(0.5, 2);
@@ -52,6 +61,7 @@ test('print and notes retain each slide progress without animation', async ({ pa
   await expect(page.locator('#status')).toContainText('8 ページ');
   await page.emulateMedia({ media: 'print' });
   const states = await page.locator('#print-pages .decorations').evaluateAll(nodes => nodes.map(scene => ({
+    islands: scene.querySelectorAll('.island').length,
     sharks: Number(scene.dataset.sharks),
     rabbit: Number(scene.dataset.rabbit),
     animation: getComputedStyle(scene.querySelector('.rabbit-position')).animationName,
@@ -60,6 +70,7 @@ test('print and notes retain each slide progress without animation', async ({ pa
   expect(states.map(state => state.sharks)).toEqual([1, 1, 20, 20, 20, 20, 20, 20]);
   expect(states.map(state => state.rabbit)).toEqual([0, 0, 0, 0, 0.5, 0.5, 1, 1]);
   states.forEach(state => {
+    expect(state.islands).toBe(2);
     expect(state.animation).toBe('none');
     expect(state.fraction).toBeCloseTo(state.rabbit, 2);
   });

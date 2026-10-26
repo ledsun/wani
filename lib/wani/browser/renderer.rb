@@ -31,6 +31,8 @@ module Wani
           decorations.setAttribute("data-rabbit", progress.rabbit_fraction.to_s)
           decorations[:style].setProperty("--rabbit-progress", progress.rabbit_fraction.to_s)
           decorations[:style].setProperty("--rabbit-from", progress.rabbit_fraction.to_s)
+          child(decorations, "span", "island island-left")
+          child(decorations, "span", "island island-right")
           bridge = child(decorations, "span", "bridge")
           BridgeProgress::SEGMENTS.times do |index|
             segment = child(bridge, "span", "bridge-segment")
