@@ -84,8 +84,11 @@ module Wani
       end
 
       def go(index)
+        previous_number = @active_number || 0
         @index = index.clamp(0, @sections.length - 1)
+        @renderer.transition(@sections[@index], previous_number)
         @sections.each_with_index { |section, number| section[:classList].toggle("active", number == @index) }
+        @active_number = @index + 1
         element("position")[:textContent] = "#{@index + 1} / #{@sections.length}"
         desired = "#slide=#{@index + 1}"
         JS.global[:history].replaceState(JS::Null, "", desired) unless JS.global[:location][:hash].to_s == desired

@@ -30,7 +30,7 @@ test('normal and alternating-notes PDFs retain content, images and footer', asyn
   expect(normal[0]).toContain('800 × 200 image');
   normal.forEach(text => expect(text).toContain('Wani test presentation'));
   expect(normal.join(' ')).not.toContain('Private');
-  await expect(page.locator('#print-pages .decorations img')).toHaveCount(6);
+  await expect(page.locator('#print-pages .rabbit-image')).toHaveCount(3);
   await page.locator('#print-notes').click();
   await expect(page.locator('#status')).toContainText('6 ページ');
   const notes = await inspect(await page.pdf({ preferCSSPageSize: true, printBackground: true, path: info.outputPath('notes.pdf') }));

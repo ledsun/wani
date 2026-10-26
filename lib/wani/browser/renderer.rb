@@ -1,3 +1,5 @@
+require_relative "bridge_progress"
+
 module Wani
   module Browser
     class Renderer
@@ -18,14 +20,40 @@ module Wani
         footer = child(section, "footer", "slide-footer")
         child(footer, "span", "footer-text")[:textContent] = @presentation.footer
         if @presentation.decorations
+          progress = BridgeProgress.new(slide.number, @presentation.slides.length)
           decorations = child(footer, "span", "decorations")
-          %w[rabbit shark].each do |name|
-            image = child(decorations, "img", "decoration")
-            image[:src] = "/assets/#{name}.svg"
+          decorations.setAttribute("aria-hidden", "true")
+          decorations.setAttribute("data-slide", slide.number.to_s)
+          decorations.setAttribute("data-sharks", progress.sharks.to_s)
+          decorations.setAttribute("data-rabbit", progress.rabbit_fraction.to_s)
+          decorations[:style].setProperty("--rabbit-progress", progress.rabbit_fraction.to_s)
+          decorations[:style].setProperty("--rabbit-from", progress.rabbit_fraction.to_s)
+          bridge = child(decorations, "span", "bridge")
+          BridgeProgress::SEGMENTS.times do |index|
+            segment = child(bridge, "span", "bridge-segment")
+            segment.setAttribute("data-present", (index >= BridgeProgress::SEGMENTS - progress.sharks).to_s)
+            image = child(segment, "img", "bridge-wani")
+            image[:src] = "/assets/shark.svg"
             image[:alt] = ""
           end
+          rabbit = child(child(decorations, "span", "rabbit-position"), "img", "rabbit-image")
+          rabbit[:src] = "/assets/rabbit.svg"
+          rabbit[:alt] = ""
         end
         section
+      end
+
+      def transition(section, from_number)
+        scene = section.querySelector(".decorations")
+        return if scene == JS::Null
+        previous = BridgeProgress.new(from_number, @presentation.slides.length)
+        current = BridgeProgress.new(scene.getAttribute("data-slide").to_s.to_i, @presentation.slides.length)
+        scene[:style].setProperty("--rabbit-from", previous.rabbit_fraction.to_s)
+        scene.setAttribute("data-moving", (previous.rabbit_fraction != current.rabbit_fraction).to_s)
+        scene.querySelectorAll(".bridge-segment").to_a.each_with_index do |segment, index|
+          appearing = index >= BridgeProgress::SEGMENTS - current.sharks && index < BridgeProgress::SEGMENTS - previous.sharks
+          segment.setAttribute("data-appearing", appearing.to_s)
+        end
       end
 
       def resolve_links(root)
