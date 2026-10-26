@@ -108,10 +108,10 @@ test('speaker window shows private notes and stays synchronized', async ({ page 
   await expect(page.locator('#position')).toHaveText('1 / 3');
 });
 
-test('disabling decorations and invalid Markdown have explicit outcomes', async ({ page }) => {
+test('legacy decorations setting is ignored and invalid Markdown is rejected', async ({ page }) => {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\nfooter: Footer\ndecorations: false\n---\n# Simple' }));
   await ready(page);
-  await expect(page.locator('.decorations')).toHaveCount(0);
+  await expect(page.locator('.slide.active .decorations')).toBeVisible();
   await page.unroute('**/talk/slides.md');
   await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\nfooter: !ruby/object:Object {}\n---' }));
   await page.reload();

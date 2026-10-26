@@ -53,10 +53,13 @@ test('only page footers appear and page count stays to the right of the bridge',
   await speaker.close();
 });
 
-test('page numbers remain without decorations', async ({ page }) => {
+test('page numbers remain when printing', async ({ page }) => {
   await ready(page, '---\ndecorations: false\n---\n# First\n\n---\n\n# Second');
-  await expect(page.locator('.decorations')).toHaveCount(0);
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('#print-pages .decorations').first()).toBeHidden();
+  await expect(page.locator('#print-pages .slide-number').first()).toBeVisible();
   await expect(page.locator('.slide.active .slide-number')).toHaveText('1/2');
+  await page.emulateMedia({ media: 'screen' });
   await page.keyboard.press('End');
   await expect(page.locator('.slide.active .slide-number')).toHaveText('2/2');
 });

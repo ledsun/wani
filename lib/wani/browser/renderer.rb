@@ -22,29 +22,27 @@ module Wani
         number = child(footer, "span", "slide-number")
         number[:textContent] = "#{slide.number}/#{@presentation.slides.length}"
         number.setAttribute("aria-label", "#{@presentation.slides.length} ページ中 #{slide.number} ページ")
-        if @presentation.decorations
-          progress = BridgeProgress.new(slide.number, @presentation.slides.length)
-          decorations = child(footer, "span", "decorations")
-          decorations.setAttribute("aria-hidden", "true")
-          decorations.setAttribute("data-slide", slide.number.to_s)
-          decorations.setAttribute("data-sharks", progress.sharks.to_s)
-          decorations.setAttribute("data-rabbit", progress.rabbit_fraction.to_s)
-          decorations[:style].setProperty("--rabbit-progress", progress.rabbit_fraction.to_s)
-          decorations[:style].setProperty("--rabbit-from", progress.rabbit_fraction.to_s)
-          child(decorations, "span", "island island-left")
-          child(decorations, "span", "island island-right")
-          bridge = child(decorations, "span", "bridge")
-          BridgeProgress::SEGMENTS.times do |index|
-            segment = child(bridge, "span", "bridge-segment")
-            segment.setAttribute("data-present", (index >= BridgeProgress::SEGMENTS - progress.sharks).to_s)
-            image = child(segment, "img", "bridge-wani")
-            image[:src] = "/assets/shark.svg"
-            image[:alt] = ""
-          end
-          rabbit = child(child(decorations, "span", "rabbit-position"), "img", "rabbit-image")
-          rabbit[:src] = "/assets/rabbit.svg"
-          rabbit[:alt] = ""
+        progress = BridgeProgress.new(slide.number, @presentation.slides.length)
+        decorations = child(footer, "span", "decorations")
+        decorations.setAttribute("aria-hidden", "true")
+        decorations.setAttribute("data-slide", slide.number.to_s)
+        decorations.setAttribute("data-sharks", progress.sharks.to_s)
+        decorations.setAttribute("data-rabbit", progress.rabbit_fraction.to_s)
+        decorations[:style].setProperty("--rabbit-progress", progress.rabbit_fraction.to_s)
+        decorations[:style].setProperty("--rabbit-from", progress.rabbit_fraction.to_s)
+        child(decorations, "span", "island island-left")
+        child(decorations, "span", "island island-right")
+        bridge = child(decorations, "span", "bridge")
+        BridgeProgress::SEGMENTS.times do |index|
+          segment = child(bridge, "span", "bridge-segment")
+          segment.setAttribute("data-present", (index >= BridgeProgress::SEGMENTS - progress.sharks).to_s)
+          image = child(segment, "img", "bridge-wani")
+          image[:src] = "/assets/shark.svg"
+          image[:alt] = ""
         end
+        rabbit = child(child(decorations, "span", "rabbit-position"), "img", "rabbit-image")
+        rabbit[:src] = "/assets/rabbit.svg"
+        rabbit[:alt] = ""
         section
       end
 

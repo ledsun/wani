@@ -55,25 +55,22 @@ test('wanis build from the right, then rabbit crosses left to right and reverses
   await expect(scene.locator('.bridge-segment[data-present="true"]')).toHaveCount(1);
 });
 
-test('print and notes retain each slide progress without animation', async ({ page }) => {
-  await ready(page);
-  await page.locator('#print-notes').click();
-  await expect(page.locator('#status')).toContainText('8 ページ');
-  await page.emulateMedia({ media: 'print' });
-  const states = await page.locator('#print-pages .decorations').evaluateAll(nodes => nodes.map(scene => ({
-    islands: scene.querySelectorAll('.island').length,
-    sharks: Number(scene.dataset.sharks),
-    rabbit: Number(scene.dataset.rabbit),
-    animation: getComputedStyle(scene.querySelector('.rabbit-position')).animationName,
-    fraction: parseFloat(getComputedStyle(scene.querySelector('.rabbit-position')).left) / (scene.clientWidth - 84),
-  })));
-  expect(states.map(state => state.sharks)).toEqual([1, 1, 20, 20, 20, 20, 20, 20]);
-  expect(states.map(state => state.rabbit)).toEqual([0, 0, 0, 0, 0.5, 0.5, 1, 1]);
-  states.forEach(state => {
-    expect(state.islands).toBe(2);
-    expect(state.animation).toBe('none');
-    expect(state.fraction).toBeCloseTo(state.rabbit, 2);
-  });
+test('normal and notes PDFs always hide the bridge and rabbit', async ({ page }) => {
+  await ready(page, '---\ndecorations: true\n---\n' + source);
+  for (const button of ['#print', '#print-notes']) {
+    await page.locator(button).click();
+    await page.emulateMedia({ media: 'print' });
+    const scenes = page.locator('#print-pages .decorations');
+    await expect(scenes).toHaveCount(button === '#print' ? 4 : 8);
+    for (const scene of await scenes.all()) {
+      await expect(scene).toBeHidden();
+      await expect(scene.locator('.rabbit-image')).toBeHidden();
+      for (const wani of await scene.locator('.bridge-wani').all()) await expect(wani).toBeHidden();
+    }
+    await expect(page.locator('#print-pages .slide-number').first()).toBeVisible();
+    await page.emulateMedia({ media: 'screen' });
+    await expect(page.locator('#stage .slide.active .decorations')).toBeVisible();
+  }
 });
 
 test('reduced motion leaves the rabbit at the correct position', async ({ page }) => {
@@ -84,8 +81,9 @@ test('reduced motion leaves the rabbit at the correct position', async ({ page }
   await expect(page.locator('.slide.active .rabbit-position')).toHaveCSS('animation-name', 'none');
 });
 
-test('a single-slide presentation also starts and prints with one wani', async ({ page }) => {
+test('a single-slide presentation starts with one wani and hides it when printing', async ({ page }) => {
   await ready(page, '# Only slide');
   await expect(page.locator('.slide.active .bridge-segment[data-present="true"]')).toHaveCount(1);
-  await expect(page.locator('#print-pages .bridge-segment[data-present="true"]')).toHaveCount(1);
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('#print-pages .decorations')).toBeHidden();
 });

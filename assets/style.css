@@ -72,7 +72,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 @media (max-width: 700px) { .brand span, .toolbar-divider { display: none; } .toolbar { padding: 8px; } .help { gap: 8px; } .speaker-columns { grid-template-columns: 1fr; } }
 @page { size: 320mm 180mm; margin: 0; }
 @media print {
-  .decorations * { animation: none !important; }
+  .decorations { display: none !important; }
   body { margin: 0; background: white; }
   body > :not(#print-pages) { display: none !important; }
   #print-pages { display: block; }

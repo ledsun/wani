@@ -18,9 +18,9 @@ class CoreTest < Minitest::Test
   end
 
   def test_metadata_titles_notes_and_footer
-    document = parse("---\ndecorations: false\n---\n# **One** &amp; two\n\n<!-- footer: Footer -->\n\nBody\n\n<!--\nnotes:\nPrivate **note**\n-->\n\n---\n\n###### Last")
+    document = parse("# **One** &amp; two\n\n<!-- footer: Footer -->\n\nBody\n\n<!--\nnotes:\nPrivate **note**\n-->\n\n---\n\n###### Last")
     assert_equal "Footer", document.slides[0].footer
-    refute document.decorations
+    refute_includes document.to_h.keys, :decorations
     assert_equal ["One & two", "Last"], document.slides.map(&:title)
     assert_includes document.slides[0].notes_html, "<strong>note</strong>"
     refute_includes document.slides[0].html, "Private"
