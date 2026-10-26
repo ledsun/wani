@@ -14,7 +14,7 @@ test('CLI server boots packaged Ruby and renders the presentation', async ({ pag
   await expect(page.locator('#stage > .slide')).toHaveCount(3);
   await expect(page.locator('.slide.active .title')).toHaveText('Ruby in your browser');
   await expect(page.locator('.slide.active strong')).toHaveText('Wani');
-  await expect(page.locator('.slide.active .footer-text')).toHaveText('Wani test presentation');
+  await expect(page.locator('.slide.active .page-footnote')).toHaveText('Wani test presentation');
   await expect(page.locator('.slide.active .rabbit-image')).toHaveCount(1);
   await expect(page.locator('.slide.active .bridge-segment[data-present="true"]')).toHaveCount(1);
   await expect(page.locator('#stage')).not.toContainText('speaker notes');
@@ -109,11 +109,11 @@ test('speaker window shows private notes and stays synchronized', async ({ page 
 });
 
 test('legacy decorations setting is ignored and invalid Markdown is rejected', async ({ page }) => {
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\nfooter: Footer\ndecorations: false\n---\n# Simple' }));
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\npage-footnote: Footnote\ndecorations: false\n---\n# Simple' }));
   await ready(page);
   await expect(page.locator('.slide.active .decorations')).toBeVisible();
   await page.unroute('**/talk/slides.md');
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\nfooter: !ruby/object:Object {}\n---' }));
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\npage-footnote: !ruby/object:Object {}\n---' }));
   await page.reload();
   await expect(page.locator('#status')).toContainText('Invalid or unsafe YAML', { timeout: 60_000 });
   await expect(page.locator('#next')).toBeDisabled();

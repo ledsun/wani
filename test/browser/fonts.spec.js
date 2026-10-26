@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
-const source = '<!-- footer: 日本語フッター -->\n\n# 日本語プレゼンテーション\n\n漢字・ひらがな・カタカナと English 123。\n\n**太字の本文**も同じフォントです。\n\n<!-- notes: 日本語の発表者ノート。 -->';
+const source = '<!-- page-footnote: 日本語脚注 -->\n\n# 日本語プレゼンテーション\n\n漢字・ひらがな・カタカナと English 123。\n\n**太字の本文**も同じフォントです。\n\n<!-- notes: 日本語の発表者ノート。 -->';
 
 async function ready(page) {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: source, contentType: 'text/plain; charset=utf-8' }));
@@ -55,7 +55,7 @@ test('bundled Regular and Bold render Japanese before layout and embed in PDF', 
     // Chromium may map shared kanji glyphs to compatibility radicals (⽇ vs 日).
     const extracted = text.items.map(item => item.str).join('').normalize('NFKC');
     expect(extracted).toContain('日本語プレゼンテーション');
-    expect(extracted).toContain('日本語フッター');
+    expect(extracted).toContain('日本語脚注');
     // Font names plus FontFile2 streams establish that glyphs are embedded, not OS-only.
     const raw = pdfBuffer.toString('latin1');
     expect(raw).toMatch(/\/BaseFont\s*\/(?:[A-Z]{6}\+)?IBMPlexSansJP(?:[\s/]|$)/);

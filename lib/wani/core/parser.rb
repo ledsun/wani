@@ -20,12 +20,12 @@ module Wani
           warn = ->(message) { diagnostics << Diagnostic.new(severity: :warning, message: message, slide: number) }
           warn.call("Empty slide between separators") if chunk.strip.empty? && chunks.length > 1
           document = markdown(chunk)
-          metadata = { "notes" => [], "footer" => [] }
+          metadata = { "notes" => [], "page-footnote" => [] }
           extract_metadata(document.root, metadata)
           notes = metadata.fetch("notes")
-          footers = metadata.fetch("footer")
+          page_footnotes = metadata.fetch("page-footnote")
           warn.call("Multiple notes blocks combined") if notes.length > 1
-          warn.call("Multiple footer blocks: the last value is used") if footers.length > 1
+          warn.call("Multiple page-footnote blocks: the last value is used") if page_footnotes.length > 1
           headings = walk(document.root).select { |node| node.type == :header }
           warn.call("Additional heading: only the first heading is the slide title") if headings.length > 1
           title = headings.first
@@ -34,7 +34,7 @@ module Wani
           renderer = SafeHTML.new(&warn)
           note_roots = notes.map { |text| markdown(text).root }
           Slide.new(number: number, title: title ? plain(title) : "", html: renderer.render(document.root),
-            footer: footers.empty? ? "" : footers.last.strip,
+            page_footnote: page_footnotes.empty? ? "" : page_footnotes.last.strip,
             notes_html: note_roots.map { |root| renderer.render(root) }.join,
             images: ([document.root] + note_roots).flat_map { |root| walk(root).select { |node| node.type == :img && SafeHTML.safe_url?(node.attr['src'], image: true) }.map { |node| node.attr['src'] } }.uniq)
         end
@@ -92,8 +92,8 @@ module Wani
 
       def extract_metadata(node, metadata)
         node.children.delete_if do |child|
-          if child.type == :xml_comment && child.value.match?(/\A<!--\s*(notes|footer):/)
-            match = child.value.match(/\A<!--\s*(notes|footer):\s*(.*?)-->\s*\z/m)
+          if child.type == :xml_comment && child.value.match?(/\A<!--\s*(notes|page-footnote):/)
+            match = child.value.match(/\A<!--\s*(notes|page-footnote):\s*(.*?)-->\s*\z/m)
             raise Error, "Invalid slide metadata block" unless match
             metadata.fetch(match[1]) << match[2]
             true

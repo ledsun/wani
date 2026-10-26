@@ -17,7 +17,7 @@ async function inspect(buffer) {
   return pages;
 }
 
-test('normal and alternating-notes PDFs retain content, images and footer', async ({ page }, info) => {
+test('normal and alternating-notes PDFs retain content, images and page footnote', async ({ page }, info) => {
   await page.goto('/');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   // Ctrl+P also has a prepared normal DOM immediately after startup.

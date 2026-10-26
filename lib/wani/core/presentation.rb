@@ -5,7 +5,7 @@ module Wani
         { severity: severity.to_s, message: message, slide: slide }
       end
     end
-    Slide = Struct.new(:number, :title, :html, :notes_html, :images, :footer, keyword_init: true)
+    Slide = Struct.new(:number, :title, :html, :notes_html, :images, :page_footnote, keyword_init: true)
     Presentation = Struct.new(:slides, :time_limit, :diagnostics, keyword_init: true) do
       def to_h
         { slides: slides.map(&:to_h), time_limit: time_limit, diagnostics: diagnostics.map(&:to_h) }

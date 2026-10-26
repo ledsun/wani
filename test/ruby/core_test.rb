@@ -17,9 +17,9 @@ class CoreTest < Minitest::Test
     end
   end
 
-  def test_metadata_titles_notes_and_footer
-    document = parse("# **One** &amp; two\n\n<!-- footer: Footer -->\n\nBody\n\n<!--\nnotes:\nPrivate **note**\n-->\n\n---\n\n###### Last")
-    assert_equal "Footer", document.slides[0].footer
+  def test_metadata_titles_notes_and_page_footnote
+    document = parse("# **One** &amp; two\n\n<!-- page-footnote: Footnote -->\n\nBody\n\n<!--\nnotes:\nPrivate **note**\n-->\n\n---\n\n###### Last")
+    assert_equal "Footnote", document.slides[0].page_footnote
     refute_includes document.to_h.keys, :decorations
     assert_equal ["One & two", "Last"], document.slides.map(&:title)
     assert_includes document.slides[0].notes_html, "<strong>note</strong>"
@@ -36,7 +36,7 @@ class CoreTest < Minitest::Test
   end
 
   def test_unsafe_yaml_and_unclosed_structures_are_rejected
-    ["---\nfooter: !ruby/object:Object {}\n---", "---\na: &a x\nfooter: *a\n---", "---\nfooter: [broken\n---", "---\nfooter: x", "# Title\n\n<!--\nnotes: never closed", "#\n"].each do |source|
+    ["---\npage-footnote: !ruby/object:Object {}\n---", "---\na: &a x\npage-footnote: *a\n---", "---\npage-footnote: [broken\n---", "---\npage-footnote: x", "# Title\n\n<!--\nnotes: never closed", "#\n"].each do |source|
       assert_raises(Wani::Core::Parser::Error) { parse(source) }
     end
   end
@@ -80,7 +80,7 @@ class CoreTest < Minitest::Test
       assert_equal 0, cli.run(["check", file])
       File.write(file, "![Missing](missing.svg)")
       assert_equal 1, cli.run(["check", file])
-      File.write(file, "---\nfooter: [broken\n---")
+      File.write(file, "---\npage-footnote: [broken\n---")
       assert_equal 1, cli.run(["check", file])
     end
   end

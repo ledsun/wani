@@ -18,7 +18,7 @@ module Wani
         body[:innerHTML] = notes ? slide.notes_html : slide.html
         resolve_links(body)
         footer = child(section, "footer", "slide-footer")
-        child(footer, "span", "footer-text")[:textContent] = slide.footer
+        child(footer, "span", "page-footnote")[:textContent] = slide.page_footnote
         number = child(footer, "span", "slide-number")
         number[:textContent] = "#{slide.number}/#{@presentation.slides.length}"
         number.setAttribute("aria-label", "#{@presentation.slides.length} ページ中 #{slide.number} ページ")
