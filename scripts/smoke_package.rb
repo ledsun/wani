@@ -31,6 +31,11 @@ Dir.mktmpdir("wani-installed-") do |directory|
     installed_root = capture!(env, RbConfig.ruby, "-rwani", "-e", "puts Wani::ROOT").strip
     abort "Source checkout was used instead of installed gem" unless installed_root.start_with?(home + File::SEPARATOR)
     abort "Installed wasm differs from build" unless Digest::SHA256.file(File.join(installed_root, "assets/wani.wasm")).hexdigest == Digest::SHA256.file(File.join(root, "assets/wani.wasm")).hexdigest
+    %w[Regular Bold].each do |weight|
+      relative = "assets/fonts/IBMPlexSansJP-#{weight}.woff2"
+      abort "Installed #{weight} font differs from source" unless Digest::SHA256.file(File.join(installed_root, relative)).hexdigest == Digest::SHA256.file(File.join(root, relative)).hexdigest
+    end
+    abort "Font license missing from gem" unless File.file?(File.join(installed_root, "third_party/ibm-plex-sans-jp/LICENSE.txt"))
     stdin, stdout, stderr, wait = Open3.popen3(env, RbConfig.ruby, executable, "serve", "--port", "0", chdir: talk)
     begin
       line = Timeout.timeout(10) { stdout.gets }
@@ -39,6 +44,7 @@ Dir.mktmpdir("wani-installed-") do |directory|
       abort "Installed server did not serve HTML" unless http.get("/").code == "200"
       abort "Installed server did not serve Markdown" unless http.get("/talk/slides.md").code == "200"
       abort "Installed wasm unavailable" unless http.head("/assets/wani.wasm")["Content-Type"] == "application/wasm"
+      abort "Installed font unavailable" unless http.head("/assets/fonts/IBMPlexSansJP-Regular.woff2")["Content-Type"] == "font/woff2"
       Process.kill("INT", wait.pid)
       abort "Installed server failed to stop" unless Timeout.timeout(10) { wait.value }.success?
       puts "Installed gem: new / check / serve / browser assets / SIGINT all passed"

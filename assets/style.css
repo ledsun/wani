@@ -1,11 +1,25 @@
-:root { font-family: "Noto Sans", "Noto Sans JP", system-ui, sans-serif; color: #20352e; background: #e9eee9; }
+@font-face {
+  font-family: "IBM Plex Sans JP";
+  src: url("/assets/fonts/IBMPlexSansJP-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: "IBM Plex Sans JP";
+  src: url("/assets/fonts/IBMPlexSansJP-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+:root { font-family: "IBM Plex Sans JP", sans-serif; color: #20352e; background: #e9eee9; }
 * { box-sizing: border-box; }
 body { margin: 0; }
 .toolbar { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 24px; border-bottom: 1px solid #d4ddd5; background: #f8faf7; }
 .brand { font-family: Georgia, serif; font-size: 28px; font-weight: bold; text-decoration: none; color: #294d3e; }
 .brand span { margin-left: 14px; font: 11px system-ui, sans-serif; color: #75867c; letter-spacing: .06em; }
 nav { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-button { color: #294d3e; border: 1px solid #ccd8cc; background: #fff; border-radius: 6px; padding: 8px 12px; cursor: pointer; font: 13px system-ui, sans-serif; }
+button { color: #294d3e; border: 1px solid #ccd8cc; background: #fff; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-family: inherit; font-size: 13px; }
 button:hover { background: #edf3eb; }
 button:disabled { cursor: default; opacity: .4; }
 button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offset: 3px; }
@@ -20,7 +34,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .body p { margin: 0 0 .35em; }
 .body ul, .body ol { margin: .2em 0 .4em; padding-left: 1.35em; }
 .body pre { margin: .3em 0; padding: .4em .55em; background: #f3f6f2; white-space: pre-wrap; tab-size: 2; }
-.body code { font-family: ui-monospace, monospace; font-size: .8em; }
+.body code { font-family: ui-monospace, "IBM Plex Sans JP", monospace; font-size: .8em; }
 .body blockquote { border-left: .08em solid #b6cbb9; margin: .4em 0; padding-left: .6em; }
 .body table { border-collapse: collapse; width: 100%; }
 .body th, .body td { border: 1px solid #bac8bd; padding: .15em .3em; }

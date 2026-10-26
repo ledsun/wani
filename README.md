@@ -16,7 +16,7 @@ npm ci
 bundle exec rake build:wasm
 
 gem build wani.gemspec
-gem install ./wani-0.1.0.gem
+gem install ./wani-0.1.1.gem
 
 wani new my-talk
 cd my-talk
@@ -126,6 +126,20 @@ HTML の直接記述を使った装飾、スクリプト、埋め込み iframe�
 画像・フォントの完了後に印刷し、フッターと差し替え可能な仮SVG装飾も出力します。
 装飾を無効にする場合は `decorations: false` を指定してください。
 
+## 同梱フォント
+
+日本語・英数字の標準書体は **IBM Plex Sans JP** です。
+IBM 公式パッケージ `@ibm/plex-sans-jp@3.0.0` の Regular（400）と Bold（700）の
+完成版 WOFF2 を gem に同梱します。フォントファイルの合計は4,635,040 bytesです。
+OS へのインストールや外部 CDN への接続は不要です。
+
+本文・タイトル・発表者画面・PDF に同じ書体を使い、計測前に通常と太字の両方を明示的に読み込みます。
+コードは等幅フォントを優先し、日本語の代替候補に IBM Plex Sans JP を指定します。
+読み込みに失敗した場合は警告し、代替書体で表示を続けます。
+
+フォントは SIL Open Font License 1.1 です。原文のライセンス・著作権表示と配布元・チェックサムは
+[third_party/ibm-plex-sans-jp](third_party/ibm-plex-sans-jp/README.md) に保持しています。
+
 ## 配信とアーキテクチャ
 
 - `lib/wani/core/`: Markdown文字列から独自モデルを返す共通パーサー、許可した要素のレンダラー、静的検証。
@@ -173,6 +187,7 @@ bundle exec ruby scripts/smoke_package.rb
 ```
 
 既存 Chrome を使う場合は `CHROMIUM_PATH=/usr/bin/google-chrome npm test`。
+自動テストは手動確認用サーバーとの競合を避け、既定で18000番を使います（`WANI_TEST_PORT` で変更可能）。
 Rubyソースを変更した場合は必ず wasm を再ビルドしてください。テストがソースと生成物のハッシュを照合します。
 ソース管理では生成 wasm を除外していますが、`gem build` の成果物には含めます。
 `bundle exec rake package` は再ビルド・Rubyテスト・gem作成をまとめて実行します。

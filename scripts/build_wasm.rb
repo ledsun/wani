@@ -3,6 +3,7 @@ require "fileutils"
 require "tmpdir"
 require "json"
 require "digest"
+require_relative "../lib/wani/version"
 
 root = File.expand_path("..", __dir__)
 Dir.chdir(root) do
@@ -28,6 +29,6 @@ Dir.chdir(root) do
   end
   FileUtils.cp(loader, "assets/runtime.pr672.js")
   %w[LICENSE NOTICE].each { |name| FileUtils.cp("#{loader_root}/#{name}", "assets/runtime.#{name}") }
-  File.write("assets/build.json", JSON.pretty_generate({ version: "0.1.0", source_sha256: source_digest.hexdigest, loader_commit: provenance.fetch("commit"), wasm_sha256: Digest::SHA256.file("assets/wani.wasm").hexdigest }))
+  File.write("assets/build.json", JSON.pretty_generate({ version: Wani::VERSION, source_sha256: source_digest.hexdigest, loader_commit: provenance.fetch("commit"), wasm_sha256: Digest::SHA256.file("assets/wani.wasm").hexdigest }))
   puts "Built assets/wani.wasm (#{File.size('assets/wani.wasm')} bytes)"
 end

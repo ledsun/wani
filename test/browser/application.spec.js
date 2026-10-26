@@ -19,7 +19,7 @@ test('CLI server boots packaged Ruby and renders the presentation', async ({ pag
   await expect(page.locator('#stage')).not.toContainText('speaker notes');
   await expect(page.locator('#warnings')).toBeHidden();
   expect(errors).toEqual([]);
-  expect(requests.every(url => url.origin === 'http://127.0.0.1:8000')).toBe(true);
+  expect(requests.every(url => url.origin === new URL(page.url()).origin)).toBe(true);
   expect(requests.filter(url => url.pathname.endsWith('.js')).map(url => url.pathname)).toEqual(['/assets/runtime.pr672.js']);
 });
 

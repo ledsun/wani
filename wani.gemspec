@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.homepage = "https://github.com/ledsun/wani"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2"
-  spec.files = Dir["lib/**/*.rb", "exe/*", "assets/*", "templates/*", "third_party/**/*", "README.md", "LICENSE"].select { |file| File.file?(file) }
+  spec.files = Dir["lib/**/*.rb", "exe/*", "assets/**/*", "templates/*", "third_party/**/*", "README.md", "LICENSE"].select { |file| File.file?(file) }
   spec.bindir = "exe"
   spec.executables = ["wani"]
   spec.require_paths = ["lib"]

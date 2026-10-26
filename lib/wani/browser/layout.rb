@@ -13,6 +13,19 @@ module Wani
       end
 
       def wait_assets(root)
+        unless @fonts_loaded
+          # Hidden slide titles do not trigger font downloads. Load both weights
+          # explicitly before fitting, including Japanese glyphs in the request.
+          family = JS.global.getComputedStyle(@document[:documentElement])[:fontFamily].to_s
+          [400, 700].each do |weight|
+            begin
+              @document[:fonts].load("#{weight} 16px #{family}", "日本語 ABC").await
+            rescue JS::Error
+              @warn.call("フォントを読み込めませんでした。代替フォントを使用します (#{weight})")
+            end
+          end
+          @fonts_loaded = true
+        end
         @document[:fonts][:ready].await
         root.querySelectorAll("img").to_a.each do |image|
           unless image[:complete] == JS::True

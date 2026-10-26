@@ -23,6 +23,13 @@ class HTTPTest < Minitest::Test
     assert_includes http.get("/").body, "data-ruby-wasm-url"
     assert_equal "text/plain; charset=utf-8", response["Content-Type"]
     assert_equal "application/wasm", http.head("/assets/wani.wasm")["Content-Type"]
+    %w[Regular Bold].each do |weight|
+      font = http.get("/assets/fonts/IBMPlexSansJP-#{weight}.woff2")
+      assert_equal "200", font.code
+      assert_equal "font/woff2", font["Content-Type"]
+      assert_equal "wOF2", font.body.byteslice(0, 4)
+    end
+    assert_equal "404", http.get("/assets/fonts/unknown.woff2").code
     assert_equal "404", http.get("/talk/private.txt").code
     %w[/talk/%2e%2e/etc/passwd.svg /talk/%252e%252e/etc/passwd.svg /talk/escape.svg].each do |path|
       assert_equal "403", http.get(path).code, path

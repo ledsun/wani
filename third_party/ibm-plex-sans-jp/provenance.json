@@ -1,0 +1,20 @@
+{
+  "package": "@ibm/plex-sans-jp",
+  "version": "3.0.0",
+  "repository": "https://github.com/IBM/plex/tree/master/packages/plex-sans-jp",
+  "tarball": "https://registry.npmjs.org/@ibm/plex-sans-jp/-/plex-sans-jp-3.0.0.tgz",
+  "tarball_sha256": "051484321fcffecc69c3d608b739c5fe0f558b0fd1de7958d96ca360d161de7f",
+  "license": "OFL-1.1",
+  "files": {
+    "IBMPlexSansJP-Bold.woff2": {
+      "sha256": "38336fbb169ae1b7b6ca2539332e1d59c9be222227659d23f8eb70ecda60337d",
+      "bytes": 2352756,
+      "source_path": "fonts/complete/woff2/hinted/IBMPlexSansJP-Bold.woff2"
+    },
+    "IBMPlexSansJP-Regular.woff2": {
+      "sha256": "ec27e9b75cd90a6f7abe96ede49d00b151eb5b1c2c886bfe9b4fc845f40be1ff",
+      "bytes": 2282284,
+      "source_path": "fonts/complete/woff2/hinted/IBMPlexSansJP-Regular.woff2"
+    }
+  }
+}
