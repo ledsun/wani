@@ -27,6 +27,17 @@ class CLIServerTest < Minitest::Test
     assert_equal original, File.read(File.join(@talk, "slides.md"))
   end
 
+  def test_generated_sample_has_valid_slides_and_a_served_image
+    assert_equal 0, @cli.run(["check", File.join(@talk, "slides.md")])
+    assert_includes @out.string, "8 slides; 0 diagnostics"
+    status, headers, body = @application.call("/talk/images/workflow.svg")
+    assert_equal 200, status
+    assert_includes headers["Content-Type"], "image/svg+xml"
+    assert_includes body, "<svg"
+    spec = Gem::Specification.load(File.join(Wani::ROOT, "wani.gemspec"))
+    assert_includes spec.files, "templates/images/workflow.svg"
+  end
+
   def test_routes_app_document_and_images_but_not_private_files
     assert_equal [200, "app"], @application.call("/").values_at(0, 2)
     assert_equal 200, @application.call("/talk/slides.md")[0]

@@ -38,7 +38,7 @@ rbenv 環境でインストール後に `wani: command not found` となる場�
 
 表示された http://127.0.0.1:8000/ を Chrome または Edge で開きます。
 `slides.md` を編集したらブラウザーを再読み込みしてください。
-生成されるプロジェクトは `slides.md` と空の `images/` だけです。
+生成されるプロジェクトには、各種Markdown記法を紹介する8ページの `slides.md` と、`images/` 内のサンプルSVG画像が含まれます。
 HTML / CSS / JS ランタイム / wasm は gem が保持し、各プロジェクトへコピーしません。
 
 ## コマンド

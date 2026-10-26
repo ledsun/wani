@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">Markdown から発表と PDF へ</title>
+  <desc id="desc">原稿を書く、ブラウザーで発表する、PDF を配布する、という3つの手順を矢印で結んだ図。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#527b65"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="300" rx="24" fill="#f3f6f2"/>
+  <g fill="white" stroke="#91af99" stroke-width="3">
+    <rect x="35" y="50" width="310" height="200" rx="18"/>
+    <rect x="445" y="50" width="310" height="200" rx="18"/>
+    <rect x="855" y="50" width="310" height="200" rx="18"/>
+  </g>
+  <g stroke="#527b65" stroke-width="5" marker-end="url(#arrow)">
+    <path d="M365 150 H420"/>
+    <path d="M775 150 H830"/>
+  </g>
+  <g font-family="sans-serif" text-anchor="middle" fill="#20352e">
+    <g font-size="20" fill="#527b65">
+      <text x="190" y="95">01 / WRITE</text>
+      <text x="600" y="95">02 / PRESENT</text>
+      <text x="1010" y="95">03 / SHARE</text>
+    </g>
+    <g font-size="38" font-weight="bold">
+      <text x="190" y="158">Markdown</text>
+      <text x="600" y="158">Browser</text>
+      <text x="1010" y="158">PDF</text>
+    </g>
+    <g font-size="24" fill="#527b65">
+      <text x="190" y="205">slides.md</text>
+      <text x="600" y="205">wani serve</text>
+      <text x="1010" y="205">Slides + Notes</text>
+    </g>
+  </g>
+</svg>

@@ -30,7 +30,7 @@ module Wani
       raise ArgumentError, "Usage: wani new DIRECTORY" unless args.length == 1
       destination = File.expand_path(args.first)
       Dir.mkdir(destination) # Atomic refusal, including existing directories and symlinks.
-      Dir.mkdir(File.join(destination, "images"))
+      FileUtils.cp_r(File.join(ROOT, "templates/images"), File.join(destination, "images"))
       FileUtils.cp(File.join(ROOT, "templates/slides.md"), File.join(destination, "slides.md"))
       @out.puts "Created #{args.first}. Run: cd #{args.first} && wani serve"
       0
