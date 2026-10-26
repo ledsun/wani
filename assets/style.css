@@ -88,3 +88,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .time-expired-image { width: min(90vw, calc(65vh * 1024 / 683)); aspect-ratio: 1024 / 683; flex-shrink: 0; background: url('/assets/time-expired.png') right center / 200% 100% no-repeat; }
 #time-expired p { margin: 8px 0; text-align: center; }
 @media print { #countdown, #time-expired { display: none !important; } }
+
+#countdown.urgent:not([hidden]) { inset: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 0; background: transparent; color: #b32d1e; line-height: 1; }
+#countdown.urgent span { display: block; font-size: clamp(24px, 4vw, 48px); text-shadow: 0 0 12px white, 0 0 3px white; animation: countdown-shrink .8s ease-out both; }
+@keyframes countdown-shrink { from { font-size: var(--countdown-peak); } to { font-size: clamp(24px, 4vw, 48px); } }
+@media (prefers-reduced-motion: reduce) { #countdown.urgent span { animation: none; } }

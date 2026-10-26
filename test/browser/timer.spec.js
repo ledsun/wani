@@ -7,6 +7,7 @@ async function ready(page, limit) {
   await page.goto('/');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 100));
 }
 
 test('default five minutes counts down and expires even on the final slide, then resumes once', async ({ page }) => {
@@ -72,4 +73,45 @@ test('resume button recovers and reload starts a fresh timer', async ({ page }) 
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   await expect(page.locator('#time-expired')).toBeHidden();
   await expect(page.locator('#countdown')).toBeVisible();
+});
+
+test('last five seconds grow progressively and shrink back in 0.8 seconds', async ({ page }) => {
+  await ready(page, 0.1);
+  await page.clock.fastForward(1_100);
+  const countdown = page.locator('#countdown');
+  for (let seconds = 5; seconds >= 1; seconds--) {
+    await expect(countdown).toHaveText(String(seconds));
+    await expect(countdown).toHaveClass('urgent');
+    const sizes = await countdown.locator('span').evaluate(number => {
+      const animation = number.getAnimations()[0];
+      animation.pause();
+      animation.currentTime = 0;
+      const peak = parseFloat(getComputedStyle(number).fontSize);
+      animation.currentTime = 800;
+      return {
+        peak, rest: parseFloat(getComputedStyle(number).fontSize),
+        duration: animation.effect.getTiming().duration,
+        shortSide: Math.min(innerWidth, innerHeight),
+        normal: Math.min(48, Math.max(24, innerWidth * 0.04)),
+      };
+    });
+    expect(sizes.peak).toBeCloseTo(sizes.shortSide * (6 - seconds) * 0.2, 1);
+    expect(sizes.rest).toBeCloseTo(sizes.normal, 1);
+    expect(sizes.duration).toBe(800);
+    // The 200 ms polling must not restart the same number's animation.
+    await page.clock.fastForward(400);
+    expect(await countdown.locator('span').evaluate(number => number.getAnimations()[0].currentTime)).toBe(800);
+    if (seconds > 1) await page.clock.fastForward(600);
+  }
+  await page.clock.fastForward(600);
+  await expect(countdown).toBeHidden();
+  await expect(page.locator('#time-expired')).toBeVisible();
+});
+
+test('reduced motion keeps the final countdown readable without scaling', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await ready(page, 0.1);
+  await page.clock.fastForward(1_100);
+  await expect(page.locator('#countdown')).toHaveText('5');
+  await expect(page.locator('#countdown span')).toHaveCSS('animation-name', 'none');
 });

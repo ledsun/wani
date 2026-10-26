@@ -19,7 +19,20 @@ module Wani
         remaining = ((@deadline - JS.global[:Date].now.to_f) / 1000).ceil
         countdown = element("countdown")
         countdown[:hidden] = remaining > 30 || remaining <= 0
-        countdown[:textContent] = "残り #{remaining} 秒" if remaining.between?(1, 30)
+        if remaining.between?(1, 30) && remaining != @last_countdown
+          @last_countdown = remaining
+          urgent = remaining <= 5
+          countdown[:classList].toggle("urgent", urgent)
+          countdown.setAttribute("aria-label", "発表の残り時間 #{remaining} 秒")
+          if urgent
+            number = @document.createElement("span")
+            number[:textContent] = remaining.to_s
+            number[:style].setProperty("--countdown-peak", "#{(6 - remaining) * 20}vmin")
+            countdown.replaceChildren(number)
+          else
+            countdown[:textContent] = "残り #{remaining} 秒"
+          end
+        end
         return if remaining > 0
 
         JS.global.clearInterval(@timer_id)
