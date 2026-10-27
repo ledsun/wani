@@ -55,6 +55,26 @@ class CLIServerTest < Minitest::Test
     end
   end
 
+  def test_font_diagnostics_at_startup_and_after_document_changes
+    file = File.join(@talk, "slides.md")
+    source = "---\nfont: Missing Font\n---\n# Hello\n"
+    File.write(file, source)
+    messages = []
+    app = Wani::Server::Application.new(file, assets: @assets, diagnostics: ->(message) { messages << message })
+    assert_equal ["warning: Unregistered font: Missing Font; using fallback"], messages
+    assert_equal [200, source], app.call("/talk/slides.md").values_at(0, 2)
+    assert_equal 1, messages.size
+    File.write(file, "# Hello\n")
+    app.call("/talk/slides.md")
+    assert_equal 1, messages.size
+    File.write(file, source)
+    app.call("/talk/slides.md")
+    assert_equal 2, messages.size
+    File.write(file, "---\nfont: []\n---\n# Hello\n")
+    assert_equal 200, app.call("/talk/slides.md")[0]
+    assert_includes messages.last, "error: Invalid Markdown: font must be a non-empty font name or ID"
+  end
+
   def test_symlink_escape_is_denied
     outside = File.join(@directory, "secret.svg")
     File.write(outside, "secret")

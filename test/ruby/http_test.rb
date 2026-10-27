@@ -8,18 +8,21 @@ class HTTPTest < Minitest::Test
   def test_real_cli_serves_selected_file_and_rejects_escape_then_shuts_down
     directory = Dir.mktmpdir("wani-http-")
     file = File.join(directory, "other.md")
-    File.write(file, "# Selected file")
+    source = "---\nfont: Missing Font\n---\n# Selected file"
+    File.write(file, source)
     File.write(File.join(directory, "private.txt"), "private")
     File.symlink("/etc/passwd", File.join(directory, "escape.svg"))
     root = File.expand_path("../..", __dir__)
     stdin, stdout, stderr, wait = Open3.popen3(RbConfig.ruby, "-I#{root}/lib", "#{root}/exe/wani", "serve", file, "--port", "0", "--bind", "127.0.0.1")
+    warning = Timeout.timeout(10) { stdout.gets }
+    assert_equal "warning: Unregistered font: Missing Font; using fallback\n", warning
     line = Timeout.timeout(10) { stdout.gets }
     assert_match(/Wani: http:\/\/127.0.0.1:\d+\//, line)
     uri = URI(line[/http:\/\/\S+/])
     http = Net::HTTP.new(uri.host, uri.port, nil)
     response = http.get("/talk/slides.md")
     assert_equal "200", response.code
-    assert_equal "# Selected file", response.body
+    assert_equal source, response.body
     assert_includes http.get("/").body, "data-ruby-wasm-url"
     assert_equal "text/plain; charset=utf-8", response["Content-Type"]
     assert_equal "application/wasm", http.head("/assets/wani.wasm")["Content-Type"]

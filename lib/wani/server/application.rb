@@ -12,11 +12,13 @@ module Wani
       TYPES = { ".html" => "text/html; charset=utf-8", ".css" => "text/css; charset=utf-8", ".rb" => "text/plain; charset=utf-8", ".js" => "text/javascript", ".wasm" => "application/wasm", ".md" => "text/plain; charset=utf-8", ".svg" => "image/svg+xml", ".png" => "image/png", ".jpg" => "image/jpeg", ".jpeg" => "image/jpeg", ".webp" => "image/webp", ".json" => "application/json", ".woff2" => "font/woff2" }.freeze
       IMAGES = %w[.png .jpg .jpeg .webp .svg].freeze
 
-      def initialize(file, assets: File.join(Wani::ROOT, "assets"))
+      def initialize(file, assets: File.join(Wani::ROOT, "assets"), diagnostics: nil)
         @file = File.realpath(file)
         raise ArgumentError, "Markdown is not a file: #{file}" unless File.file?(@file)
         @root = File.dirname(@file)
         @assets = File.realpath(assets)
+        @diagnostics = diagnostics
+        report_font(File.read(@file, encoding: "UTF-8")) if @diagnostics
       end
 
       def call(raw_path)
@@ -45,7 +47,9 @@ module Wani
         else
           headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: http:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
         end
-        [200, headers, File.binread(file)]
+        body = File.binread(file)
+        report_font(body.dup.force_encoding(Encoding::UTF_8)) if path == "/talk/slides.md" && @diagnostics
+        [200, headers, body]
       rescue ArgumentError, EncodingError
         [403, {}, "Forbidden"]
       rescue Errno::ENOENT, Errno::ENOTDIR
@@ -55,6 +59,19 @@ module Wani
       end
 
       private
+
+      def report_font(source)
+        message = begin
+          name = Core::Parser.new.parse(source).fonts["default"]
+          if name && !Core::Fonts.resolve(Fonts::Manager.new(@root).list, name)
+            "warning: Unregistered font: #{name}; using fallback"
+          end
+        rescue Core::Parser::Error, ArgumentError => error
+          "error: #{error.message}"
+        end
+        @diagnostics.call(message) if message && message != @last_diagnostic
+        @last_diagnostic = message
+      end
 
       def decode(raw)
         raw = raw.split("?", 2).first

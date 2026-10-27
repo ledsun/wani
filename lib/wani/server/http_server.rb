@@ -5,7 +5,7 @@ module Wani
   module Server
     class HTTPServer
       def initialize(file, bind: "127.0.0.1", port: 8000, out: $stdout)
-        app = Application.new(file)
+        app = Application.new(file, diagnostics: ->(message) { out.puts(message); out.flush })
         @server = WEBrick::HTTPServer.new(BindAddress: bind, Port: port,
           Logger: WEBrick::Log.new($stderr, WEBrick::Log::WARN), AccessLog: [],
           StartCallback: -> { out.puts "Wani: http://#{bind.include?(':') ? "[#{bind}]" : bind}:#{@server.listeners.first.addr[1]}/"; out.flush })
