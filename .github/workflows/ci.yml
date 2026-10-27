@@ -38,11 +38,12 @@ jobs:
           cache: npm
       - run: npm ci
 
+      - name: Build fresh WASM
+        run: bundle exec rake build:wasm
+
       - name: Ruby tests
         run: bundle exec rake test
 
-      - name: Build fresh WASM
-        run: bundle exec rake build:wasm
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Browser tests
