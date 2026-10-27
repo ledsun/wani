@@ -6,7 +6,7 @@
 <title>Wani — Markdown presentation</title>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
-<body>
+<body class="presentation-view">
 <header class="toolbar">
   <a class="brand" href="#slide=1" aria-label="Wani: 最初のスライド">Wani<span>Markdown × Ruby</span></a>
   <nav aria-label="プレゼンテーション操作">
@@ -21,6 +21,7 @@
   </nav>
 </header>
 <p id="status" role="status">Ruby を読み込んでいます…</p>
+<aside id="warnings" role="status" hidden></aside>
 <div id="viewport"><main id="stage" aria-label="スライド"></main></div>
 <output id="countdown" aria-live="off" aria-label="発表の残り時間" hidden></output>
 <section id="time-expired" role="dialog" aria-modal="true" aria-labelledby="time-expired-title" hidden>
@@ -29,7 +30,6 @@
   <p>← または → キーで元のスライドに戻れます</p>
   <button id="resume-slides">スライドに戻る</button>
 </section>
-<aside id="warnings" role="status" hidden></aside>
 <footer class="help">← → ページ移動 <span>F 全画面</span><span>N ノート</span><span>Home / End 最初・最後</span></footer>
 <article id="print-pages" aria-hidden="true"></article>
 <script src="/assets/runtime.pr672.js" data-ruby-wasm-url="/assets/wani.wasm"></script>

@@ -79,6 +79,21 @@ test('failed images and overflow display slide number and content', async ({ pag
   await expect(page.locator('#warnings')).toContainText('missing.svg');
   await expect(page.locator('#warnings')).toContainText('スライド 1');
   await expect(page.locator('#warnings')).toContainText('Unbreakable');
+  await expect(page.locator('#warnings')).toBeInViewport({ ratio: 1 });
+  const warningBox = await page.locator('#warnings').boundingBox();
+  const viewportBox = await page.locator('#viewport').boundingBox();
+  expect(warningBox.y + warningBox.height).toBeLessThanOrEqual(viewportBox.y);
+  for (const size of [{ width: 1700, height: 1100 }, { width: 800, height: 650 }]) {
+    await page.setViewportSize(size);
+    await expect.poll(() => page.evaluate(() => {
+      const root = document.documentElement;
+      const slide = document.querySelector('.slide.active').getBoundingClientRect();
+      const viewport = document.querySelector('#viewport').getBoundingClientRect();
+      return root.scrollHeight <= root.clientHeight && root.scrollWidth <= root.clientWidth &&
+        slide.top >= viewport.top && slide.bottom <= viewport.bottom;
+    })).toBe(true);
+    await expect(page.locator('#warnings')).toBeInViewport({ ratio: 1 });
+  }
   await expect(page.locator('#stage .body')).toHaveCSS('font-size', '16px');
 });
 
