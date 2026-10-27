@@ -9,6 +9,10 @@ module Wani
       end
 
       def apply(settings, sections)
+        weights = [settings.fetch("title-weight", 700), settings.fetch("body-weight", 400)]
+        weight_style = @document.createElement("style")
+        weight_style[:textContent] = ".slide .title { font-weight: #{weights[0]}; } .slide .body { font-weight: #{weights[1]}; }"
+        @document[:head].appendChild(weight_style)
         name = settings["default"]
         return unless name
         response = JS.global.fetch("/talk/fonts.json").await
@@ -33,7 +37,7 @@ module Wani
         # All slide and note characters are supplied, including characters in hidden slides.
         text = sections.map { |section| section[:textContent].to_s }.join
         entry.fetch("styles", ["normal"]).each do |style|
-          [400, 700].each do |weight|
+          ([400, 700] + weights).uniq.each do |weight|
             loading = @document[:fonts].load("#{style} #{weight} 16px #{family}", text)
             timeout = JS.global[:Promise].new do |resolve, _reject|
               JS.global.setTimeout(-> { resolve.apply(false); nil }, 20_000)

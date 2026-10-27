@@ -185,6 +185,23 @@ class FontsTest < Minitest::Test
     end
   end
 
+  def test_front_matter_font_weights
+    parser = Wani::Core::Parser.new
+    presentation = parser.parse("---\nfont: Noto Sans JP\ntitle-weight: 500\nbody-weight: 400\n---\n# Text")
+    assert_equal({ 'default' => 'Noto Sans JP', 'title-weight' => 500, 'body-weight' => 400 }, presentation.fonts)
+    assert_equal presentation.fonts, presentation.to_h[:fonts]
+    assert_equal({}, parser.parse('# Text').fonts)
+    %w[title-weight body-weight].each do |key|
+      [1, 500, 1000].each do |weight|
+        assert_equal({ key => weight }, parser.parse("---\n#{key}: #{weight}\n---\n# Text").fonts)
+      end
+      ['0', '1001', '-1', '500.5', 'bold', '"500"', 'null', 'true', '[]'].each do |value|
+        error = assert_raises(Wani::Core::Parser::Error) { parser.parse("---\n#{key}: #{value}\n---\n# Text") }
+        assert_includes error.message, key
+      end
+    end
+  end
+
   def test_ambiguous_and_missing_fonts
     @http.catalog = [{ id: 'noto-sans-jp', family: 'Noto Sans JP' }, { id: 'noto-sans', family: 'Noto Sans' }]
     error = assert_raises(Wani::Fonts::Error) { @manager.add('Noto') }

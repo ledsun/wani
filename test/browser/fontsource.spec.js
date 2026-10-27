@@ -6,14 +6,14 @@ const live = process.env.WANI_FONTSOURCE_PROJECT;
 const family = live ? 'Noto Sans JP Variable' : 'Fixture Font';
 const source = `---\nfont: ${live ? 'Noto Sans JP' : family}\n---\n# 日本語プレゼンテーション\n\n本文 **太字**\n\n---\n\n# 隠れた文字\n\n𠮷野家と髙橋`;
 
-async function setup(page, { missing = false, broken = false } = {}) {
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: source }));
+async function setup(page, { missing = false, broken = false, markdown = source } = {}) {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: markdown }));
   if (!live) {
     await page.route('**/talk/fonts.json', route => route.fulfill({ json: missing ? {} : {
       fixture: { family, css_family: family, stylesheet: 'fonts/fixture/font.css', styles: ['normal'] },
     } }));
     await page.route('**/talk/fonts/fixture/font.css', route => route.fulfill({ contentType: 'text/css', body:
-      [400, 700].map(weight => `@font-face { font-family: "${family}"; font-weight: ${weight}; src: url('./files/${weight}.woff2') format('woff2'); }`).join('\n'),
+      [400, 500, 700].map(weight => `@font-face { font-family: "${family}"; font-weight: ${weight}; src: url('./files/${weight}.woff2') format('woff2'); }`).join('\n'),
     }));
     await page.route('**/talk/fonts/fixture/files/*.woff2', async route => {
       if (broken) return route.abort();
@@ -43,6 +43,8 @@ test('project font loads before fitting hidden slides and is embedded in PDF off
   expect(earlyMeasurements.length).toBeGreaterThan(0);
   expect(earlyMeasurements.every(item => item.family.includes(family) && item.status === 'loaded')).toBe(true);
   await expect(page.locator('#warnings')).toBeHidden();
+  await expect(page.locator('.slide.active .title')).toHaveCSS('font-weight', '700');
+  await expect(page.locator('.slide.active .body')).toHaveCSS('font-weight', '400');
   const client = await page.context().newCDPSession(page);
   await client.send('DOM.enable');
   await client.send('CSS.enable');
@@ -86,3 +88,28 @@ test('project font download failure warns and falls back before layout', async (
   await expect(page.locator('#warnings')).toContainText('フォントを読み込めませんでした');
   await expect(page.locator('.slide.active .title')).toHaveCSS('font-family', /IBM Plex Sans JP/);
 });
+
+for (const customFont of [true, false]) {
+  test(`font weights apply before fitting and to print pages (custom font: ${customFont})`, async ({ page }) => {
+    await page.addInitScript(() => {
+      window.measuredWeights = [];
+      const descriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollWidth');
+      Object.defineProperty(Element.prototype, 'scrollWidth', { ...descriptor, get() {
+        if (this.matches('.title, .body')) window.measuredWeights.push({
+          title: this.matches('.title'), weight: getComputedStyle(this).fontWeight, status: document.fonts.status,
+        });
+        return descriptor.get.call(this);
+      } });
+    });
+    await setup(page, { markdown: `---\n${customFont ? `font: ${live ? 'Noto Sans JP' : family}\n` : ''}title-weight: 500\nbody-weight: ${customFont ? 400 : 300}\n---\n# Title\n\nBody **bold**\n\n---\n\n# Hidden title\n\nHidden body` });
+    const measurements = await page.evaluate(() => window.measuredWeights);
+    expect(measurements.length).toBeGreaterThan(0);
+    expect(measurements.every(item => item.weight === (item.title ? '500' : (customFont ? '400' : '300')) && item.status === 'loaded')).toBe(true);
+    await expect(page.locator('.slide.active .title')).toHaveCSS('font-weight', '500');
+    await expect(page.locator('.slide.active .body')).toHaveCSS('font-weight', customFont ? '400' : '300');
+    await expect(page.locator('.slide.active strong')).toHaveCSS('font-weight', customFont ? '700' : '400');
+    await page.emulateMedia({ media: 'print' });
+    await expect(page.locator('#print-pages .title').first()).toHaveCSS('font-weight', '500');
+    await expect(page.locator('#print-pages .body').first()).toHaveCSS('font-weight', customFont ? '400' : '300');
+  });
+}

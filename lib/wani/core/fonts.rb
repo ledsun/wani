@@ -6,10 +6,19 @@ module Wani
       ID = /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/
       module_function
 
-      def settings(value)
-        return {} if value.nil?
-        raise ArgumentError, "font must be a non-empty font name or ID" unless value.is_a?(String) && !value.strip.empty? && !value.match?(/[\x00-\x1f]/)
-        { "default" => value.strip }
+      def settings(value, config = {})
+        settings = {}
+        unless value.nil?
+          raise ArgumentError, "font must be a non-empty font name or ID" unless value.is_a?(String) && !value.strip.empty? && !value.match?(/[\x00-\x1f]/)
+          settings["default"] = value.strip
+        end
+        %w[title-weight body-weight].each do |key|
+          next unless config.key?(key)
+          weight = config[key]
+          raise ArgumentError, "#{key} must be an integer from 1 to 1000" unless weight.is_a?(Integer) && (1..1000).cover?(weight)
+          settings[key] = weight
+        end
+        settings
       end
 
       def registry(source)
