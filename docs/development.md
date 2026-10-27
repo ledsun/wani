@@ -51,7 +51,7 @@ PDF.js は生成済みPDFのテスト検査にだけ使い、製品のPDF生成�
 3. 「PDF」「ノート付き PDF」から保存し、16:9、ページ順、画像、フォント、脚注を確認する。
 4. 長文・長いタイトル・複数画像・壊れた画像でレイアウトと警告を確認する。
 
-コードフェンスとリスト／引用が複雑に入れ子になる全ての Markdown 方言、構文ハイライト、
+コードフェンスとリスト／引用が複雑に入れ子になる全ての Markdown 方言、
 最適な画像の自動配置、文書のライブリロードは対象外です。
 発表者画面はメインの Ruby VM が制御するため、メインの終了・再読み込み後はノート画面を開き直してください。
 将来の改善候補は追加ブラウザー検証、画像配置の改善、公式ローダーへの移行です。
@@ -62,3 +62,11 @@ PDF.js は生成済みPDFのテスト検査にだけ使い、製品のPDF生成�
 - [PR ローダーの出所・再ビルド](../third_party/ruby-wasm-loader/README.md)
 - [フォントの出所・ライセンス](../third_party/ibm-plex-sans-jp/README.md)
 - [初回 MVP の実装記録](implementation-report.md)（当時の環境・結果を記録した文書）
+
+## 構文ハイライト
+
+`SafeHTML`は言語指定付きコードブロックを処理するときにRougeを遅延読み込みします。未知の言語はエスケープ済みのプレーンHTMLに戻します。スライドとノートは同じ処理を使います。
+
+`bundle exec rake build:wasm`はRougeをWASMへ同梱し、`assets/highlight.css`（Githubテーマ）と`assets/rouge.LICENSE`も生成します。これらの生成ファイルはリポジトリに含め、直接編集せずビルドで更新してください。CSSはメイン画面と発表者画面の両方で読み込みます。
+
+WASMは配布ランタイム内のStringScannerを使用します。ネイティブ側の`strscan`とはパッチバージョンが異なる場合があります。依存更新時には`test/browser/parity.spec.js`でネイティブRubyとの出力一致を確認してください。ビルドのsource digestにはcore/browserのソースに加えてlockfile、ビルドスクリプト、bootstrapを含めます。

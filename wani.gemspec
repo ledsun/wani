@@ -14,6 +14,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "kramdown", "= 2.5.2"
   spec.add_dependency "kramdown-parser-gfm", "= 1.1.0"
   spec.add_dependency "rexml", "= 3.4.4"
+  spec.add_dependency "rouge", "= 5.1.0"
   spec.add_dependency "webrick", "~> 1.9"
   spec.metadata["source_code_uri"] = spec.homepage
 end

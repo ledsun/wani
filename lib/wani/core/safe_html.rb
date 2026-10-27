@@ -28,7 +28,7 @@ module Wani
         when :root then body
         when :text then self.class.escape(node.value)
         when :codespan then "<code>#{self.class.escape(node.value)}</code>"
-        when :codeblock then "<pre><code>#{self.class.escape(node.value)}</code></pre>"
+        when :codeblock then codeblock(node)
         when :a
           if self.class.safe_url?(node.attr["href"])
             "<a href=\"#{self.class.escape(node.attr['href'])}\" rel=\"noopener noreferrer\">#{body}</a>"
@@ -53,6 +53,21 @@ module Wani
         when :xml_comment then ""
         else body
         end
+      end
+
+      private
+
+      def codeblock(node)
+        language = node.options[:lang]
+        if language && !language.empty?
+          require "rouge"
+          lexer = Rouge::Lexer.find(language)
+          if lexer
+            html = Rouge::Formatters::HTML.new.format(lexer.new.lex(node.value))
+            return "<pre class=\"highlight\"><code>#{html}</code></pre>"
+          end
+        end
+        "<pre><code>#{self.class.escape(node.value)}</code></pre>"
       end
     end
   end

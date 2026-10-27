@@ -5,6 +5,7 @@ PATH
       kramdown (= 2.5.2)
       kramdown-parser-gfm (= 1.1.0)
       rexml (= 3.4.4)
+      rouge (= 5.1.0)
       webrick (~> 1.9)
 
 GEM
@@ -22,6 +23,8 @@ GEM
     prism (1.9.0)
     rake (13.4.2)
     rexml (3.4.4)
+    rouge (5.1.0)
+      strscan (~> 3.1)
     ruby_wasm (2.10.1)
       logger
     ruby_wasm (2.10.1-aarch64-linux)
@@ -36,6 +39,7 @@ GEM
       logger
     ruby_wasm (2.10.1-x86_64-linux-musl)
       logger
+    strscan (3.1.8)
     webrick (1.9.2)
 
 PLATFORMS
@@ -62,6 +66,7 @@ CHECKSUMS
   prism (1.9.0) sha256=7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85
   rake (13.4.2) sha256=cb825b2bd5f1f8e91ca37bddb4b9aaf345551b4731da62949be002fa89283701
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
+  rouge (5.1.0) sha256=b77c632842ab7f5147940212f0345808cccfbce864fd5b631d7d12a35ac85452
   ruby_wasm (2.10.1) sha256=874e0acb783a8326bfb0db892004816c26963a4276a9f719791a8828e53a05f1
   ruby_wasm (2.10.1-aarch64-linux) sha256=133ab6ad86ff2942a4dd187ae2af87a42bbb31b42fd1ac82f738cbf658649c17
   ruby_wasm (2.10.1-aarch64-linux-musl) sha256=b92cfb5168d95837fb051c29e395c65129ef469ddd557f498948d1f20eb5bab7
@@ -69,6 +74,7 @@ CHECKSUMS
   ruby_wasm (2.10.1-x86_64-darwin) sha256=40291bed5b48c858317a31437e59d56091edda2f2c498b532238eda4cbf044d4
   ruby_wasm (2.10.1-x86_64-linux) sha256=728e29dc688246572b56dcef1c7b131431d07865320c9b8434dd1ccdfd63db2b
   ruby_wasm (2.10.1-x86_64-linux-musl) sha256=c4d16572f9a465e460490d0608e817239c5e0ddfc9553f18db2bcaebecbcdd8d
+  strscan (3.1.8) sha256=aae2db611a225559f21ffbb71765c9a4e60fd262534a9ea84f4f11c7f32f679e
   wani (0.1.8)
   webrick (1.9.2) sha256=beb4a15fc474defed24a3bda4ffd88a490d517c9e4e6118c3edce59e45864131
 

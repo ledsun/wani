@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test';
 import { spawnSync } from 'node:child_process';
 
 const fixtures = [
+  '# Highlight\n\n```rb\nputs "日本語 <script> &"\n```\n\n<!-- notes:\n```js\nconst x = 1;\n```\n-->\n',
+  '# Fallback\n\n```unknown\n<b>&</b>\n```\n\n```\n<script>plain</script>\n```\n',
+  '# Empty\n\n```ruby\n```\n',
+
   '---\npage-footnote: Shared\n---\n# **Title** &amp; more\n\nBody\n\n<!-- page-footnote: Page footnote -->\n\n<!--\nnotes:\nPrivate **notes**\n-->\n\n---\n\n## Next\n\n### Extra',
   '# Code\r\n\r\n```md\r\n---\r\n<!-- notes: literal -->\r\n```\r\n\r\n---\r\n\r\nEnd',
   '# Safe\n\n<script>alert(1)</script>\n\n[bad](javascript:alert) ![bad](data:image/svg+xml,evil) [entity](jav&#x61;script:alert)',
