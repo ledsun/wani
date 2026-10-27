@@ -156,6 +156,95 @@ OS へのインストールや外部 CDN への接続は不要です。
 フォントは SIL Open Font License 1.1 です。原文のライセンス・著作権表示と配布元・チェックサムは
 [third_party/ibm-plex-sans-jp](third_party/ibm-plex-sans-jp/README.md) に保持しています。
 
+## フォントを変更する
+
+タイトルと本文には、[Fontsource](https://fontsource.org/fonts)のフォントを追加して使えます。
+フォントの追加時にはインターネット接続が必要です。追加後はオフラインで表示・PDF出力ができ、OSへのフォントのインストールやNode.js・npmは不要です。
+
+### Fontsourceのフォントを使う
+
+「Noto Sans JP」に変更する例です。
+
+1. **フォントを選ぶ**
+
+   [Fontsource](https://fontsource.org/fonts)で検索・プレビューし、使いたいフォントの名前を確認します。
+
+2. **スライドのディレクトリで追加する**
+
+   `slides.md`があるディレクトリへ移動して実行します。`my-talk`は自分のディレクトリ名に置き換えてください。既にその中にいる場合は`cd`は不要です。
+
+   ```sh
+   cd my-talk
+   wani font add "Noto Sans JP"
+   ```
+
+   この操作で、そのプレゼンテーションにフォントをダウンロードします。Markdownの設定は次の手順で行います。
+
+3. **`slides.md`の先頭に指定する**
+
+   ```yaml
+   ---
+   font: Noto Sans JP
+   ---
+   ```
+
+   既にFront Matter（先頭の`---`で囲んだ設定）がある場合は、その中に`font: Noto Sans JP`を追記します。
+   設定の下に、スライドの見出しや本文を続けてください。コードの等幅フォントは変更されません。
+
+4. **ブラウザーで確認する**
+
+   ```sh
+   wani serve slides.md
+   ```
+
+   表示されたURLをブラウザーで開きます。既に`wani serve`を起動している場合は、開いているページを再読み込みしてください。
+   フォントが未登録・読み込み失敗の場合は警告を表示し、代替フォントで表示を続けます。
+
+フォント名の代わりにIDやFontsourceの公式ページURLでも追加できます。例えば、手順2のコマンドを次のいずれかに置き換えられます。
+
+```sh
+wani font add noto-sans-jp
+wani font add https://fontsource.org/fonts/noto-sans-jp
+```
+
+### 文字の太さを変える
+
+Front Matterの`title-weight`でタイトル、`body-weight`で本文の太さを指定できます。
+
+```yaml
+---
+font: Noto Sans JP
+title-weight: 500
+body-weight: 400
+---
+```
+
+省略時はタイトル700・本文400です。`font`を省略して、既定フォントの太さだけを変えることもできます。
+値の範囲やフォントによる表示の違いは [Markdown記法ガイド](docs/markdown.md#front-matter文書全体の設定) を参照してください。
+
+### 追加済みフォントの確認・削除
+
+`slides.md`があるディレクトリで、追加済みのフォントとIDを確認します。
+
+```sh
+wani font list
+```
+
+不要になったフォントは、一覧に表示されたIDを使って削除します。例えばNoto Sans JPなら次のとおりです。
+
+```sh
+wani font remove noto-sans-jp
+```
+
+スライドで使用中の場合は確認を求めます。削除する場合は、Front Matterの`font`も削除するか、別の追加済みフォントに変更してください。
+
+### 他の人に渡す場合
+
+追加したフォントは`fonts/ID/`、登録情報は`.wani/fonts.yml`に保存されます。
+`slides.md`や画像と一緒に、`fonts/`と`.wani/fonts.yml`も保存・配布してください。`.wani`は隠しディレクトリなので、コピーし忘れないようにしてください。
+
+各フォントのライセンスは`fonts/ID/LICENSE`に保存されます。Web公開・再配布・PDF配布の際は、そのフォントのライセンス条件を確認してください。
+
 ## 動作環境と制約
 
 確認済みの環境は Linux / Ruby 4.0.7 / Chrome 156.0.8078.47 です。
@@ -171,51 +260,3 @@ WSL2 内で `wani serve` を起動した場合は、Windows 側のブラウザ�
 
 - [アーキテクチャ](docs/architecture.md)：共通モジュール、静的配信、wasm・ローダー、フォント、レイアウトの設計
 - [開発・検証](docs/development.md)：ビルド、テスト、パッケージ作成、手動検証の手順
-
-### Fontsourceのフォントを使う
-
-[Fontsource](https://fontsource.org/fonts)でフォントを検索・プレビューし、プレゼンテーションのディレクトリでインストールします。取得・管理はRuby CLIで行い、利用者の環境にNode.jsやnpmは不要です。
-
-```sh
-wani font add "Noto Sans JP"
-# フォントIDまたは公式ページURLも指定できます
-wani font add https://fontsource.org/fonts/jetbrains-mono
-wani font list
-wani font remove jetbrains-mono
-```
-
-インストールだけではMarkdownを変更しません。`slides.md`のFront Matterに指定すると、タイトルと本文に適用されます（コードの等幅フォントは従来どおりです）。
-
-```yaml
----
-font: Noto Sans JP
-title-weight: 500
-body-weight: 400
----
-```
-
-`wani serve`は起動時とブラウザーがMarkdownを再取得したときにフォント指定を検証し、未登録フォントの警告や指定形式のエラーをターミナルにも表示します。同じ診断は連続して表示しません。
-
-`title-weight`でタイトル、`body-weight`で本文の太さを1〜1000の整数で指定できます。省略時はタイトル700・本文400です。`font`を省略して太さだけ指定することもできます。利用できる太さはフォントに依存し、該当する太さがない場合はブラウザーが近い太さを使用します。
-
-フォントは`fonts/ID/`、登録情報は`.wani/fonts.yml`に保存します。この両方をプロジェクトと一緒に保存・配布してください。登録情報には確定した配布バージョン、ライセンス種別、管理ファイル一覧とSHA-256を記録します。Variable版を優先し、通常版は利用可能な400・700を取得します。両方がない場合はエラーになります。利用可能なnormal・italicと、CSSが参照する全言語サブセットを保存するため、日本語フォントではファイル数が多くなります。
-
-インストール後は外部CDNへの接続なしで、`wani serve`によるローカル配信とPDF出力ができます。ruby.wasmがCSSを登録し、全スライド・ノートの文字についてFont Loading APIで読み込みを待ってからサイズ計算します。未登録・読み込み失敗時は画面に警告し、既定フォントで描画します。PDFは準備完了後に印刷ボタンから出力してください。
-
-同名フォントや既存ディレクトリは上書きしません。使用中フォントの削除には対話端末で確認が必要です。非対話実行では削除を拒否します。管理ファイルが変更されている場合も削除を拒否し、管理外のファイルは残します。自動更新、ローカルフォントのインポート、独自検索・プレビューUIはありません。
-
-各フォントの実際のライセンスを`fonts/ID/LICENSE`に保存します。**Web公開・再配布・PDF配布時には、そのフォントのライセンス条件を確認してください。** すべてのフォントが同じライセンスとは限りません。
-
-取得仕様の根拠: [Fonts API](https://fontsource.org/docs/api/fonts)、[配布バージョンAPI](https://fontsource.org/docs/api/version)、[公式配布・手動取得](https://fontsource.org/docs/getting-started/install)、[Variable CSS](https://fontsource.org/docs/getting-started/variable)、[公式CDN](https://fontsource.org/docs/getting-started/cdn)。CLIは公開APIとjsDelivrの固定バージョンの公式`@fontsource` / `@fontsource-variable`パッケージを直接HTTP取得します。通信は接続10秒・読み取り20秒・リクエスト全体60秒、単一ファイル32MiB・インストール合計256MiBを上限とします。
-
-通常のテストは外部APIをモックします。実サービスとの統合確認は明示的に別実行します（指定先は新しいディレクトリにしてください）。
-
-```sh
-bundle exec rake test
-bundle exec rake build:wasm
-npx playwright test
-bundle exec ruby test/integration/fontsource.rb /tmp/wani-fontsource-demo
-WANI_FONTSOURCE_PROJECT=/tmp/wani-fontsource-demo npx playwright test test/browser/fontsource.spec.js
-```
-
-ビルド・ブラウザーテスト用のNode.js依存は従来どおり開発環境だけで使用します。必要に応じて`CHROMIUM_PATH`で既存のChrome/Chromiumを指定できます。
