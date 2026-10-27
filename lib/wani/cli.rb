@@ -35,7 +35,7 @@ module Wani
       case action
       when "add"
         raise ArgumentError, "Usage: wani font add SOURCE" unless args.length == 1
-        entry = manager.add(args.first)
+        entry = with_font_progress { manager.add(args.first) }
         @out.puts "Installed #{entry['family']} (#{entry['version']}); set font in Markdown to apply it."
       when "list"
         raise ArgumentError, "Usage: wani font list" unless args.empty?
@@ -54,6 +54,34 @@ module Wani
         raise ArgumentError, "Usage: wani font add SOURCE | list | remove ID"
       end
       0
+    end
+
+    def with_font_progress
+      message = "Downloading font"
+      if @err.tty?
+        @err.print "\r#{message}.  "
+        @err.flush
+        animation = Thread.new do
+          dots = 1
+          loop do
+            sleep 0.3
+            dots = dots % 3 + 1
+            @err.print "\r#{message}#{('.' * dots).ljust(3)}"
+            @err.flush
+          end
+        end
+      else
+        @err.puts "#{message}..."
+        @err.flush
+      end
+      yield
+    ensure
+      if animation
+        animation.kill
+        animation.join
+        @err.print "\r#{' ' * (message.length + 3)}\r"
+        @err.flush
+      end
     end
 
     def create(args)

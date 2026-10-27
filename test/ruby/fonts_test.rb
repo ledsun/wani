@@ -138,6 +138,53 @@ class FontsTest < Minitest::Test
     assert_equal 1, cli.run(['font', 'add', 'Noto Sans JP'])
   end
 
+  def test_cli_add_reports_start_before_downloading_when_redirected
+    out, err = StringIO.new, StringIO.new
+    manager = Object.new
+    manager.define_singleton_method(:add) do |_source|
+      assert_message = err.string
+      raise "Missing start message" unless assert_message == "Downloading font...\n"
+      { 'family' => 'Test Font', 'version' => '1.0.0' }
+    end
+    cli = Wani::CLI.new(out: out, err: err, font_manager: manager)
+    assert_equal 0, cli.run(['font', 'add', 'test-font'])
+    assert_equal "Downloading font...\n", err.string
+    assert_includes out.string, 'Installed Test Font (1.0.0)'
+  end
+
+  def test_cli_add_animates_and_stops_on_success_failure_and_interrupt
+    [nil, Wani::Fonts::Error.new('download failed'), Interrupt.new].each do |failure|
+      out, err = StringIO.new, StringIO.new
+      frames = Queue.new
+      err.define_singleton_method(:tty?) { true }
+      err.define_singleton_method(:print) do |text|
+        super(text)
+        frames << Thread.current if text == "\rDownloading font.. "
+      end
+      animation = nil
+      manager = Object.new
+      manager.define_singleton_method(:add) do |_source|
+        animation = Timeout.timeout(5) { frames.pop }
+        raise failure if failure
+        { 'family' => 'Test Font', 'version' => '1.0.0' }
+      end
+      cli = Wani::CLI.new(out: out, err: err, font_manager: manager)
+      if failure.is_a?(Interrupt)
+        assert_raises(Interrupt) { cli.run(['font', 'add', 'test-font']) }
+      else
+        assert_equal(failure ? 1 : 0, cli.run(['font', 'add', 'test-font']))
+      end
+      refute animation.alive?
+      assert_includes err.string, "\r#{' ' * 19}\r"
+      if failure
+        refute_includes out.string, 'Installed'
+        assert_includes err.string, 'wani: download failed' unless failure.is_a?(Interrupt)
+      else
+        assert_includes out.string, 'Installed Test Font'
+      end
+    end
+  end
+
   def test_ambiguous_and_missing_fonts
     @http.catalog = [{ id: 'noto-sans-jp', family: 'Noto Sans JP' }, { id: 'noto-sans', family: 'Noto Sans' }]
     error = assert_raises(Wani::Fonts::Error) { @manager.add('Noto') }
