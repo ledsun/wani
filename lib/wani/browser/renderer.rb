@@ -53,6 +53,7 @@ module Wani
         current = BridgeProgress.new(scene.getAttribute("data-slide").to_s.to_i, @presentation.slides.length)
         scene[:style].setProperty("--rabbit-from", previous.rabbit_fraction.to_s)
         scene.setAttribute("data-moving", (previous.rabbit_fraction != current.rabbit_fraction).to_s)
+        scene.setAttribute("data-direction", current.rabbit_fraction < previous.rabbit_fraction ? "left" : "right")
         scene.querySelectorAll(".bridge-segment").to_a.each_with_index do |segment, index|
           appearing = index >= BridgeProgress::SEGMENTS - current.sharks && index < BridgeProgress::SEGMENTS - previous.sharks
           segment.setAttribute("data-appearing", appearing.to_s)

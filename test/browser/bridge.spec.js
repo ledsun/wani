@@ -49,8 +49,13 @@ test('wanis build from the right, then rabbit crosses left to right and reverses
   expect(positions).toEqual({ onIsland: true, bridgeBeforeIsland: true, above: true });
   await page.screenshot({ path: info.outputPath('rabbit-finish.png') });
   await page.keyboard.press('ArrowLeft');
+  await expect(scene.locator('.rabbit-image')).toHaveCSS('scale', '-1 1');
   await expect.poll(() => rabbitFraction(page)).toBeCloseTo(0.5, 2);
+  await page.keyboard.press('ArrowRight');
+  await expect(scene.locator('.rabbit-image')).toHaveCSS('scale', 'none');
+  await expect.poll(() => rabbitFraction(page)).toBeCloseTo(1, 2);
   await page.keyboard.press('Home');
+  await expect(scene.locator('.rabbit-image')).toHaveCSS('scale', '-1 1');
   await expect.poll(() => rabbitFraction(page)).toBeCloseTo(0, 2);
   await expect(scene.locator('.bridge-segment[data-present="true"]')).toHaveCount(1);
 });
@@ -79,6 +84,8 @@ test('reduced motion leaves the rabbit at the correct position', async ({ page }
   await page.keyboard.press('End');
   await expect.poll(() => rabbitFraction(page)).toBeCloseTo(1, 2);
   await expect(page.locator('.slide.active .rabbit-position')).toHaveCSS('animation-name', 'none');
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('.slide.active .rabbit-image')).toHaveCSS('scale', '-1 1');
 });
 
 test('a single-slide presentation starts with one wani and hides it when printing', async ({ page }) => {

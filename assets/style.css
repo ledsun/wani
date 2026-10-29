@@ -52,6 +52,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .bridge-wani { display: block; width: 100%; height: 44px; object-fit: contain; }
 .rabbit-position { position: absolute; bottom: 30px; width: 84px; height: 40px; left: calc((100% - 84px) * var(--rabbit-progress)); }
 .rabbit-image { display: block; width: 84px; height: 40px; }
+.decorations[data-direction="left"] .rabbit-image { scale: -1 1; }
 .slide.active .bridge-segment[data-appearing="true"] { animation: wani-arrive .35s ease-out; }
 .slide.active .decorations[data-moving="true"] .rabbit-position { animation: rabbit-advance .45s ease-in-out; }
 .slide.active .decorations[data-moving="true"] .rabbit-image { animation: rabbit-hop .45s ease-in-out; }
