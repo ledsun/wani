@@ -7,9 +7,11 @@ class FontHTTPTest < Minitest::Test
     client = Object.new
     client.define_singleton_method(:request) { |_request, &block| block.call(response) }
     original = Net::HTTP.method(:start)
+    Net::HTTP.singleton_class.remove_method(:start)
     Net::HTTP.define_singleton_method(:start) { |*_, **_, &block| block.call(client) }
     yield
   ensure
+    Net::HTTP.singleton_class.remove_method(:start)
     Net::HTTP.define_singleton_method(:start, original)
   end
 
@@ -26,8 +28,8 @@ class FontHTTPTest < Minitest::Test
     with_response(response) do
       assert_raises(Wani::Fonts::Error) { Wani::Fonts::HTTP.new.get('https://api.fontsource.org/v1/fonts') }
     end
-    response = Net::HTTPOK.new('1.1', '200', 'OK')
     [10, Wani::Fonts::HTTP::MAX_BYTES + 1].each do |length|
+      response = Net::HTTPOK.new('1.1', '200', 'OK')
       response['content-length'] = length.to_s
       with_response(response, 'short') do
         assert_raises(Wani::Fonts::Error) { Wani::Fonts::HTTP.new.get('https://api.fontsource.org/v1/fonts') }
