@@ -14,17 +14,23 @@ Dir.chdir(root) do
   loader = "#{loader_root}/browser.script.iife.js"
   abort "PR loader checksum mismatch" unless Digest::SHA256.file(loader).hexdigest == provenance.fetch("loader_sha256")
   source_digest = Digest::SHA256.new
-  (Dir["lib/wani/{core,browser}/**/*.rb"] + %w[Gemfile.lock scripts/build_wasm.rb assets/bootstrap.rb]).sort.each { |file| source_digest << file << File.binread(file) }
+  (Dir["lib/wani/{core,browser}/**/*.rb"] + %w[Gemfile.lock scripts/build_wasm.rb scripts/prepare_wasm_runtime.mjs assets/bootstrap.rb]).sort.each { |file| source_digest << file << File.binread(file) }
   Dir.mktmpdir("wani-pack-") do |stage|
-    FileUtils.mkdir_p("#{stage}/lib/wani")
-    %w[core browser].each { |name| FileUtils.cp_r("lib/wani/#{name}", "#{stage}/lib/wani/") }
+    app = File.join(stage, "app")
+    FileUtils.mkdir_p("#{app}/lib/wani")
+    %w[core browser].each { |name| FileUtils.cp_r("lib/wani/#{name}", "#{app}/lib/wani/") }
     %w[kramdown rexml kramdown-parser-gfm rouge].each do |name|
       spec = Gem::Specification.find_by_name(name)
-      destination = File.join(stage, "bundle", name)
+      destination = File.join(app, "bundle", name)
       FileUtils.mkdir_p(destination)
       FileUtils.cp_r(File.join(spec.full_gem_path, "lib"), destination)
     end
-    command = ["bundle", "exec", "rbwasm", "pack", "#{runtime}/ruby+stdlib.wasm", "--dir", "#{stage}::/wani", "--output", "assets/wani.wasm"]
+    minimal_runtime = File.join(stage, "runtime")
+    abort "Runtime preparation failed" unless system("node", "scripts/prepare_wasm_runtime.mjs", "#{runtime}/ruby+stdlib.wasm", minimal_runtime)
+    command = ["bundle", "exec", "rbwasm", "pack", "#{runtime}/ruby.wasm",
+      "--dir", "#{minimal_runtime}/usr::/usr", "--dir", "#{minimal_runtime}/bundle::/bundle",
+      "--dir", "#{app}::/wani",
+      "--output", "assets/wani.wasm"]
     abort "Packaging failed" unless system(*command)
   end
   require "rouge"

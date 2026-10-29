@@ -15,6 +15,13 @@ npm ci
 bundle exec rake build:wasm
 ```
 
+WASM は固定バージョンの npm 配布にある `ruby.wasm`（標準ライブラリなし）を土台にします。
+`scripts/prepare_wasm_runtime.mjs` が同じ配布の `ruby+stdlib.wasm` を起動し、
+JSON・YAML（Psych）・URI など必要な標準ライブラリと JS gem の Ruby コードだけを取り出して収録します。
+RubyGems・Bundler・Prism・テスト用 gem は収録しません。C 拡張は配布済み本体に組み込まれたものを使います。
+依存ライブラリを追加したときは、このスクリプトの収録リストも確認し、WASM を再ビルドして
+ブラウザーテストを実行してください。遅延読み込みに対応するため、標準ライブラリはコンポーネント単位で残します。
+
 ## テストとパッケージ
 
 ```sh
