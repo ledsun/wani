@@ -25,7 +25,7 @@ npm ci
 bundle exec rake build:wasm
 
 gem build wani.gemspec
-gem install ./wani-0.1.10.gem
+gem install ./wani-0.1.11.gem
 
 wani new my-talk
 cd my-talk
