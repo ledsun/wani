@@ -13,7 +13,10 @@ module Wani
         section.setAttribute("aria-label", "スライド #{slide.number}")
         title = child(section, "h1", "title")
         title[:textContent] = notes ? "ノート #{slide.number}" : slide.title
-        title[:style][:display] = "none" if title[:textContent].to_s.empty?
+        if title[:textContent].to_s.empty?
+          title[:style][:display] = "none"
+          section[:className] = "slide titleless"
+        end
         body = child(section, "div", "body")
         body[:innerHTML] = notes ? slide.notes_html : slide.html
         resolve_links(body)
