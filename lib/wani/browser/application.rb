@@ -26,6 +26,7 @@ module Wani
         @layout.wait_assets(element("stage"))
         @sections.each_with_index { |section, index| @layout.fit_slide(section, index + 1) }
         prepare_pages(false)
+        prepare_timer_image
         bind_events
         @waiting_to_start = JS.global[:location][:hash].to_s.empty?
         go(hash_index)

@@ -3,6 +3,15 @@ module Wani
     class Application
       private
 
+      # Decode the actual displayed image before enabling presentation controls.
+      def prepare_timer_image
+        return if @presentation.time_limit.zero?
+
+        element("time-expired-image").decode.await
+      rescue JS::Error
+        warn("時間切れの画像を読み込めませんでした")
+      end
+
       def start_timer
         return if @presentation.time_limit.zero?
 

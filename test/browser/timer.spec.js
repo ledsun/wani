@@ -25,9 +25,9 @@ test('default five minutes counts down and expires before the final slide, then 
   await page.clock.fastForward(29_900);
   await expect(page.locator('#time-expired')).toBeVisible();
   await expect(page.locator('#countdown')).toBeHidden();
-  const image = await page.request.get('/assets/time-expired.png');
+  const image = await page.request.get('/assets/time-expired.webp');
   expect(image.ok()).toBe(true);
-  expect(image.headers()['content-type']).toBe('image/png');
+  expect(image.headers()['content-type']).toBe('image/webp');
   await expect(page.locator('#next')).toBeEnabled();
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('#time-expired')).toBeHidden();
@@ -182,4 +182,35 @@ test('a hash starts the timer immediately without the start overlay', async ({ p
   await expect(page.locator('#start-overlay')).toBeHidden();
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('#position')).toHaveText('2 / 3');
+});
+
+
+test('presentation waits for the timeout image to decode before becoming ready', async ({ page }) => {
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  let requested;
+  const request = new Promise(resolve => { requested = resolve; });
+  await page.route('**/assets/time-expired.webp', async route => {
+    requested();
+    await gate;
+    await route.continue();
+  });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await request;
+  await expect(page.getByRole('button', { name: 'スタート', exact: true })).toBeHidden();
+  await expect(page.locator('#status')).not.toHaveText('準備できました');
+  release();
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  await expect(page.getByRole('button', { name: 'スタート', exact: true })).toBeVisible();
+  const image = page.locator('#time-expired-image');
+  expect(await image.evaluate(img => img.complete && img.naturalWidth === 1086)).toBe(true);
+  await image.evaluate(img => img.decode());
+});
+
+test('a failed timeout image warns without preventing presentation startup', async ({ page }) => {
+  await page.route('**/assets/time-expired.webp', route => route.abort());
+  await ready(page, 0.1);
+  await expect(page.locator('#warnings')).toContainText('時間切れの画像を読み込めませんでした');
+  await page.clock.fastForward(6_100);
+  await expect(page.locator('#time-expired')).toBeVisible();
 });

@@ -31,7 +31,7 @@ Dir.mktmpdir("wani-installed-") do |directory|
     installed_root = capture!(env, RbConfig.ruby, "-rwani", "-e", "puts Wani::ROOT").strip
     abort "Source checkout was used instead of installed gem" unless installed_root.start_with?(home + File::SEPARATOR)
     abort "Installed wasm differs from build" unless Digest::SHA256.file(File.join(installed_root, "assets/wani.wasm")).hexdigest == Digest::SHA256.file(File.join(root, "assets/wani.wasm")).hexdigest
-    timer_image = "assets/time-expired.png"
+    timer_image = "assets/time-expired.webp"
     abort "Installed timer image differs from source" unless Digest::SHA256.file(File.join(installed_root, timer_image)).hexdigest == Digest::SHA256.file(File.join(root, timer_image)).hexdigest
     %w[Regular Bold].each do |weight|
       relative = "assets/fonts/IBMPlexSansJP-#{weight}.woff2"
@@ -44,7 +44,7 @@ Dir.mktmpdir("wani-installed-") do |directory|
       uri = URI(line[/http:\/\/\S+/])
       http = Net::HTTP.new(uri.host, uri.port, nil)
       abort "Installed server did not serve HTML" unless http.get("/").code == "200"
-      abort "Installed server did not serve timer image" unless http.get("/assets/time-expired.png").code == "200"
+      abort "Installed server did not serve timer image" unless http.get("/assets/time-expired.webp").code == "200"
       abort "Installed server did not serve Markdown" unless http.get("/talk/slides.md").code == "200"
       abort "Installed wasm unavailable" unless http.head("/assets/wani.wasm")["Content-Type"] == "application/wasm"
       abort "Installed font unavailable" unless http.head("/assets/fonts/IBMPlexSansJP-Regular.woff2")["Content-Type"] == "font/woff2"
