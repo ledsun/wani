@@ -39,6 +39,26 @@ RubyテストはCLI・共通ロジック・ファイル配信・パストラバ�
 PDF.js は生成済みPDFのテスト検査にだけ使い、製品のPDF生成には使いません。
 `smoke_package.rb` は一時環境へ gem をインストールして `new` → `check` → `serve` と正常終了を確認し、後片付けします。
 
+## リリース
+
+依存関係と Chromium を上の手順でインストールし、変更をコミットした `main` で実行します。
+`origin` への push 権限が必要です。
+
+```sh
+bundle exec rake release
+```
+
+パッチバージョンを1つ上げ、`lib/wani/version.rb`・`Gemfile.lock`・README のインストール例を更新します。
+WASM の再ビルド、Ruby テスト、ブラウザーテスト、パッケージの動作確認が成功すると、
+バージョン更新をコミットして `vX.Y.Z` タグを作成し、`main` とタグを `origin` へ atomic push します。
+タグの push により、既存の GitHub Actions が再検証して RubyGems.org に公開します。
+コマンドの成功は push までを意味します。公開の成否は Actions の `Publish gem` で確認してください。
+
+テストに失敗した場合は、バージョン更新を元に戻し、コミット・タグ・push は行いません。
+push に失敗した場合はローカルのコミットとタグが残ります。原因を解消して、表示された
+`git push --atomic origin HEAD:refs/heads/main refs/tags/vX.Y.Z` を再実行してください。
+`CHROMIUM_PATH` などのテスト用環境変数はそのまま利用できます。
+
 ## 手動検証
 
 自動検証環境は Linux / Ruby 4.0.7 / Node.js 24.22.1 / Chrome 156.0.8078.47。

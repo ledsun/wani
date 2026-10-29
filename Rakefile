@@ -13,3 +13,8 @@ desc "Build the installable gem, including freshly packed browser assets"
 task package: ["build:wasm", :test] do
   sh "gem", "build", "wani.gemspec"
 end
+
+desc "Test, bump the patch version, commit, and push a release tag to origin"
+task :release do
+  ruby "scripts/release.rb"
+end
