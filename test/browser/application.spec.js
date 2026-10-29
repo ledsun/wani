@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-async function ready(page, hash = '') {
+async function ready(page, hash = '#slide=1') {
   await page.goto('/' + hash);
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
 }

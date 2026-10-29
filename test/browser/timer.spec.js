@@ -8,6 +8,7 @@ async function ready(page, limit) {
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 100));
+  await page.getByRole('button', { name: 'スタート', exact: true }).click();
 }
 
 test('default five minutes counts down and expires before the final slide, then resumes once', async ({ page }) => {
@@ -149,4 +150,36 @@ test('starting on the final slide, including a single slide, never expires', asy
   await expect(page.locator('#countdown')).toBeVisible();
   await page.clock.fastForward(6_100);
   await expect(page.locator('#time-expired')).toBeVisible();
+});
+
+
+test('without a hash the first slide waits for Start before counting time', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\ntime_limit: 0.1\n---\n# First\n\n---\n\n# Last' }));
+  await page.goto('/');
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 100));
+  await expect(page.locator('#start-overlay')).toBeVisible();
+  await expect(page.locator('#position')).toHaveText('1 / 2');
+  await page.keyboard.press('ArrowRight');
+  await page.clock.fastForward(60_000);
+  await expect(page.locator('#position')).toHaveText('1 / 2');
+  await expect(page.locator('#countdown')).toBeHidden();
+  await expect(page.locator('#time-expired')).toBeHidden();
+  await page.reload();
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  await expect(page.locator('#start-overlay')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#start-overlay')).toBeHidden();
+  await expect(page.locator('#countdown')).toBeVisible();
+  await page.clock.fastForward(6_100);
+  await expect(page.locator('#time-expired')).toBeVisible();
+});
+
+test('a hash starts the timer immediately without the start overlay', async ({ page }) => {
+  await page.goto('/#slide=1');
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  await expect(page.locator('#start-overlay')).toBeHidden();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('#position')).toHaveText('2 / 3');
 });

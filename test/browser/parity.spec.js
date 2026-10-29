@@ -15,7 +15,7 @@ const fixtures = [
 ];
 
 test('CRuby and browser wasm share the parser with identical models and errors', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#slide=1');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   for (const source of fixtures) {
     const native = spawnSync('bundle', ['exec', 'ruby', 'test/support/parse.rb'], { input: source, encoding: 'utf8', timeout: 30_000 });

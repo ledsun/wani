@@ -24,7 +24,7 @@ async function setup(page, { missing = false, broken = false, markdown = source 
   }
   // Internet is unavailable; the local presentation server remains available.
   await page.route(/https?:\/\/(?!127\.0\.0\.1:)/, route => route.abort());
-  await page.goto('/');
+  await page.goto('/#slide=1');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
 }
 

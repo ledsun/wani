@@ -11,7 +11,7 @@ test('new presentation renders all sample pages and its bundled image without wa
     execFileSync('bundle', ['exec', 'ruby', '-Ilib', 'exe/wani', 'new', talk]);
     await page.route('**/talk/slides.md', route => route.fulfill({ path: join(talk, 'slides.md'), contentType: 'text/plain; charset=utf-8' }));
     await page.route('**/talk/images/workflow.svg', route => route.fulfill({ path: join(talk, 'images/workflow.svg'), contentType: 'image/svg+xml' }));
-    await page.goto('/');
+    await page.goto('/#slide=1');
     await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
     await expect(page.locator('#stage > .slide')).toHaveCount(10);
     await expect(page.locator('#warnings')).toBeHidden();

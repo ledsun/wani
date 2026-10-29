@@ -4,7 +4,7 @@ const source = ['# Start', '# Bridge', '# Crossing', '# Finish'].join('\n\n---\n
 
 async function ready(page, markdown = source) {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: markdown }));
-  await page.goto('/');
+  await page.goto('/#slide=1');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
 }
 

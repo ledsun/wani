@@ -27,10 +27,17 @@ module Wani
         @sections.each_with_index { |section, index| @layout.fit_slide(section, index + 1) }
         prepare_pages(false)
         bind_events
+        @waiting_to_start = JS.global[:location][:hash].to_s.empty?
         go(hash_index)
         %w[previous next fullscreen speaker print print-notes].each { |id| element(id)[:disabled] = false }
         update_buttons
-        start_timer
+        if @waiting_to_start
+          element("start-overlay")[:hidden] = false
+          element("viewport")[:inert] = true
+          element("start-presentation").focus
+        else
+          start_timer
+        end
         element("status")[:textContent] = "準備できました"
       end
 
@@ -55,6 +62,15 @@ module Wani
       end
 
       def bind_events
+        element("start-presentation").addEventListener("click") do
+          next unless @waiting_to_start
+          @waiting_to_start = false
+          element("start-overlay")[:hidden] = true
+          element("viewport")[:inert] = false
+          element("start-presentation").blur
+          go(0)
+          start_timer
+        end
         element("previous").addEventListener("click") { go(@index - 1) }
         element("next").addEventListener("click") { go(@index + 1) }
         element("fullscreen").addEventListener("click") { fullscreen }
@@ -65,6 +81,7 @@ module Wani
           target = event[:target]
           next if event[:ctrlKey] == JS::True || event[:altKey] == JS::True || event[:metaKey] == JS::True
           next if %w[INPUT TEXTAREA SELECT].include?(target[:tagName].to_s) || target[:isContentEditable] == JS::True
+          next if @waiting_to_start && !%w[f F Escape n N].include?(event[:key].to_s)
           handled = true
           case event[:key].to_s
           when "ArrowRight", " ", "PageDown" then go(@index + 1)
@@ -89,6 +106,8 @@ module Wani
       end
 
       def go(index)
+        return if @waiting_to_start && @active_number
+
         if @time_expired
           @time_expired = false
           element("time-expired")[:hidden] = true
@@ -102,7 +121,7 @@ module Wani
         @active_number = @index + 1
         element("position")[:textContent] = "#{@index + 1} / #{@sections.length}"
         desired = "#slide=#{@index + 1}"
-        JS.global[:history].replaceState(JS::Null, "", desired) unless JS.global[:location][:hash].to_s == desired
+        JS.global[:history].replaceState(JS::Null, "", desired) unless @waiting_to_start || JS.global[:location][:hash].to_s == desired
         update_buttons
         @layout.scale
         sync_speaker

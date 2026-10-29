@@ -5,7 +5,7 @@ test('body wrapping uses rendered width at twenty fullwidth characters and respe
   await page.route('**/talk/slides.md', route => route.fulfill({
     body: readFileSync(new URL('../fixtures/wrapping/slides.md', import.meta.url), 'utf8'),
   }));
-  await page.goto('/');
+  await page.goto('/#slide=1');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   const results = [];
   for (let index = 0; index < 6; index++) {

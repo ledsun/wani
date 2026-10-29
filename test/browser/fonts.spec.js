@@ -5,7 +5,7 @@ const source = '<!-- page-footnote: 日本語脚注 -->\n\n# 日本語プレゼ�
 
 async function ready(page) {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: source, contentType: 'text/plain; charset=utf-8' }));
-  await page.goto('/');
+  await page.goto('/#slide=1');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
 }
 
