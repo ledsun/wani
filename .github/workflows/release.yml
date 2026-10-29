@@ -1,0 +1,64 @@
+name: Publish gem
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1
+        with:
+          ruby-version: '4.0.7'
+          bundler-cache: true
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.22.1'
+          cache: npm
+
+      - name: Check tag matches gem version
+        run: |
+          ruby -r ./lib/wani/version -e '
+            abort "Tag and version do not match" unless
+              ENV.fetch("GITHUB_REF_NAME") == "v#{Wani::VERSION}"
+          '
+
+      - run: npm ci
+
+      - name: Build WASM, run Ruby tests, and package gem
+        run: bundle exec rake package
+
+      - name: Browser tests
+        run: |
+          npx playwright install --with-deps chromium
+          npm test
+
+      - name: Packaged gem smoke test
+        run: bundle exec ruby scripts/smoke_package.rb
+
+      - name: Configure RubyGems credentials
+        uses: rubygems/configure-rubygems-credentials@f5a32efa94076b80b28556b2d3b04cb3707b6df1 # main
+
+      - name: Publish to RubyGems.org
+        run: |
+          version=$(ruby -r ./lib/wani/version -e 'print Wani::VERSION')
+          gem push "wani-${version}.gem"
