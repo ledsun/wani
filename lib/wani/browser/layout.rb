@@ -7,6 +7,7 @@ module Wani
       BODY_MAX = 160
       TITLE_MIN = 24
       TITLE_MAX = 220
+      NO_WRAP_EMS = 20
 
       def initialize(document, &warn)
         @document, @warn = document, warn
@@ -55,6 +56,7 @@ module Wani
           @warn.call("スライド #{number}: タイトルが収まりません: #{title[:textContent]}") unless fits?(title)
         end
         body = section.querySelector(".body")
+        prepare_wrapping(body)
         fit_images(body)
         fit_font(body, BODY_MIN, BODY_MAX)
         @warn.call("スライド #{number}: 本文が収まりません: #{body[:textContent].to_s[0, 120]}") unless fits?(body)
@@ -71,6 +73,41 @@ module Wani
       end
 
       private
+
+      def prepare_wrapping(body)
+        # Rebuild the wrappers when a slide is fitted again (for example after
+        # editing). Ranges preserve links, emphasis and explicit line breaks.
+        body.querySelectorAll("[data-wani-line]").to_a.each do |line|
+          line.replaceWith(*line[:childNodes].to_a)
+        end
+        body[:style][:fontSize] = "#{BODY_MIN}px"
+        body.querySelectorAll("p, h1, h2, h3, h4, h5, h6, li").to_a.each do |block|
+          next unless block.querySelector("p, ul, ol") == JS::Null
+          breaks = block.querySelectorAll("br").to_a
+          # Work backwards so extracting a range does not invalidate the next.
+          (0..breaks.length).to_a.reverse_each do |index|
+            range = @document.createRange
+            range.selectNodeContents(block)
+            range.setStartAfter(breaks[index - 1]) if index.positive?
+            range.setEndBefore(breaks[index]) if index < breaks.length
+            line = @document.createElement("span")
+            line.setAttribute("data-wani-line", "")
+            line[:style][:whiteSpace] = "nowrap"
+            line.appendChild(range.extractContents)
+            range.insertNode(line)
+
+            reference = @document.createElement("span")
+            reference[:textContent] = "あ" * NO_WRAP_EMS
+            reference[:style][:position] = "absolute"
+            reference[:style][:whiteSpace] = "nowrap"
+            block.appendChild(reference)
+            if line.getBoundingClientRect[:width].to_f > reference.getBoundingClientRect[:width].to_f + 0.01
+              line[:style][:whiteSpace] = "normal"
+            end
+            reference.remove
+          end
+        end
+      end
 
       def fits?(node)
         node[:scrollWidth].to_i <= node[:clientWidth].to_i + 1 && node[:scrollHeight].to_i <= node[:clientHeight].to_i + 1
