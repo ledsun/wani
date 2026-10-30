@@ -24,6 +24,37 @@ async function pdfText(buffer) {
   }
 }
 
+for (const decorations of [true, false]) {
+  test(`long footnotes are clipped and warn with decorations=${decorations}`, async ({ page }) => {
+    if (!decorations) {
+      await page.route('**/assets/style.css', async route => {
+        const response = await route.fetch();
+        await route.fulfill({ response, body: (await response.text()) + '\n.decorations { display: none; }' });
+      });
+    }
+    const footnotes = ['短い脚注', '長い脚注です。'.repeat(100), 'https://example.com/' + 'a'.repeat(500), ''];
+    await ready(page, footnotes.map((text, index) =>
+      `# Page ${index + 1}\n\n<!-- page-footnote: ${text} -->`
+    ).join('\n\n---\n\n'));
+    await expect(page.locator('#warnings')).toHaveText([
+      'スライド 2: 脚注が1行に収まりません。短くするか、詳細を本文へ移してください。',
+      'スライド 3: 脚注が1行に収まりません。短くするか、詳細を本文へ移してください。',
+    ].join('\n'));
+    await page.keyboard.press('ArrowRight');
+    const footnote = page.locator('.slide.active .page-footnote');
+    await expect(footnote).toHaveText(footnotes[1]);
+    const dimensions = await footnote.evaluate(node => {
+      const style = getComputedStyle(node);
+      return { width: node.clientWidth, scrollWidth: node.scrollWidth, height: node.clientHeight,
+        lineHeight: parseFloat(style.lineHeight), overflow: style.overflow, whiteSpace: style.whiteSpace,
+        fontSize: style.fontSize };
+    });
+    expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.width);
+    expect(Math.abs(dimensions.height - dimensions.lineHeight)).toBeLessThanOrEqual(1);
+    expect(dimensions).toMatchObject({ overflow: 'hidden', whiteSpace: 'nowrap', fontSize: '24px' });
+  });
+}
+
 test('only page footnotes appear and page count stays to the right of the bridge', async ({ page }, info) => {
   await ready(page);
   const footnote = page.locator('.slide.active .page-footnote');

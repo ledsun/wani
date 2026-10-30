@@ -60,6 +60,10 @@ module Wani
         fit_images(body)
         fit_font(body, BODY_MIN, BODY_MAX)
         @warn.call("スライド #{number}: 本文が収まりません: #{body[:textContent].to_s[0, 120]}") unless fits?(body)
+        footnote = section.querySelector(".page-footnote")
+        if footnote[:scrollWidth].to_i > footnote[:clientWidth].to_i + 1
+          @warn.call("スライド #{number}: 脚注が1行に収まりません。短くするか、詳細を本文へ移してください。")
+        end
         section[:style][:display] = ""
       end
 

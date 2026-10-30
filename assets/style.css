@@ -47,6 +47,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .body img { display: block; object-fit: contain; max-width: 100%; }
 .body a { color: #32634b; }
 .slide-footer { flex: 0 0 128px; position: relative; display: flex; align-items: start; font-size: 24px; color: #71887e; padding-top: 12px; }
+.page-footnote { width: 100%; min-width: 0; height: 1.5em; line-height: 1.5; white-space: nowrap; overflow: hidden; }
 .decorations { position: absolute; left: 0; right: 132px; bottom: 0; height: 80px; }
 .slide-number { position: absolute; right: 0; bottom: 8px; width: 112px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .decorations::after { content: ""; position: absolute; left: 0; right: 0; bottom: 8px; border-top: 2px solid #71887e25; }
