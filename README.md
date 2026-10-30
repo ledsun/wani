@@ -14,24 +14,19 @@ Rabbit へのオマージュとして、因幡の白兎に登場するワニ（�
 
 ## インストールと開始
 
-現在はソースから gem をビルドして利用します。RubyGems.org への公開は行っていません。
-Ruby 3.2 以上が必要です。ソースのビルドには Node.js 22.13 以上、npm、Bundler が必要ですが、
-ビルド済み gem の利用に Node.js は不要です。
+[RubyGems.org](https://rubygems.org/gems/wani) からインストールできます。
+Ruby 3.2 以上が必要です。利用に Node.js・npm やソースからのビルドは不要です。
 
 ```sh
-bundle config set --local path vendor/bundle
-bundle install
-npm ci
-bundle exec rake build:wasm
-
-gem build wani.gemspec
-gem install ./wani-0.1.12.gem
+gem install wani
 
 wani new my-talk
 cd my-talk
 wani check
 wani serve
 ```
+
+ソースからのビルド手順は [開発・検証](docs/development.md) を参照してください。
 
 rbenv 環境でインストール後に `wani: command not found` となる場合は、
 `rbenv rehash` を実行して実行ファイルの shim を更新してください。
