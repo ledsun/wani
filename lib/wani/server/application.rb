@@ -8,8 +8,9 @@ module Wani
     # Only the selected Markdown, images below its directory and fixed gem assets are public.
     class Application
       ASSETS = %w[index.html style.css highlight.css rouge.LICENSE bootstrap.rb speaker.html rabbit.svg shark.svg time-expired.webp runtime.pr672.js wani.wasm runtime.LICENSE runtime.NOTICE build.json
-                  fonts/IBMPlexSansJP-Regular.woff2 fonts/IBMPlexSansJP-Bold.woff2].freeze
-      TYPES = { ".html" => "text/html; charset=utf-8", ".css" => "text/css; charset=utf-8", ".rb" => "text/plain; charset=utf-8", ".js" => "text/javascript", ".wasm" => "application/wasm", ".md" => "text/plain; charset=utf-8", ".svg" => "image/svg+xml", ".png" => "image/png", ".jpg" => "image/jpeg", ".jpeg" => "image/jpeg", ".webp" => "image/webp", ".json" => "application/json", ".woff2" => "font/woff2" }.freeze
+                  fonts/IBMPlexSansJP-Regular.woff2 fonts/IBMPlexSansJP-Bold.woff2
+                  fonts/UDEVGothic-Regular.ttf fonts/UDEVGothic-Bold.ttf].freeze
+      TYPES = { ".html" => "text/html; charset=utf-8", ".css" => "text/css; charset=utf-8", ".rb" => "text/plain; charset=utf-8", ".js" => "text/javascript", ".wasm" => "application/wasm", ".md" => "text/plain; charset=utf-8", ".svg" => "image/svg+xml", ".png" => "image/png", ".jpg" => "image/jpeg", ".jpeg" => "image/jpeg", ".webp" => "image/webp", ".json" => "application/json", ".woff2" => "font/woff2", ".ttf" => "font/ttf" }.freeze
       IMAGES = %w[.png .jpg .jpeg .webp .svg].freeze
 
       def initialize(file, assets: File.join(Wani::ROOT, "assets"), diagnostics: nil)

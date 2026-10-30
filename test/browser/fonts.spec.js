@@ -42,8 +42,9 @@ test('bundled Regular and Bold render Japanese before layout and embed in PDF', 
   expect(bodyFonts.some(font => font.postScriptName === 'IBMPlexSansJP')).toBe(true);
   await expect(page.locator('#warnings')).toBeHidden();
   expect(requests.every(url => url.origin === new URL(page.url()).origin)).toBe(true);
-  expect(requests.filter(url => url.pathname.endsWith('.woff2')).map(url => url.pathname).sort()).toEqual([
+  expect(requests.filter(url => /\.(woff2|ttf)$/.test(url.pathname)).map(url => url.pathname).sort()).toEqual([
     '/assets/fonts/IBMPlexSansJP-Bold.woff2', '/assets/fonts/IBMPlexSansJP-Regular.woff2',
+    '/assets/fonts/UDEVGothic-Bold.ttf', '/assets/fonts/UDEVGothic-Regular.ttf',
   ]);
   const pdfBuffer = await page.pdf({ preferCSSPageSize: true, printBackground: true, path: info.outputPath('japanese.pdf') });
   const task = getDocument({ data: new Uint8Array(pdfBuffer), useSystemFonts: false });
@@ -84,4 +85,46 @@ test('font failure warns and retains a usable fallback presentation', async ({ p
   await ready(page);
   await expect(page.locator('#warnings')).toContainText('フォントを読み込めませんでした');
   await expect(page.locator('.slide.active .title')).toHaveText('日本語プレゼンテーション');
+});
+
+
+test('hidden code loads UDEV before fitting and uses equal-width Japanese in PDF', async ({ page }, info) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({
+    body: '# Intro\n\nText\n\n---\n\n# Code\n\nInline `value = 123` and **`bold = 456`**.\n\n```ruby\nputs "日本語コメント" # ABC 123\n```',
+    contentType: 'text/plain; charset=utf-8',
+  }));
+  await page.route('**/UDEVGothic-*.ttf', async route => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    await route.continue();
+  });
+  await page.goto('/#slide=1');
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  expect(await page.evaluate(() => [400, 700].every(weight => document.fonts.check(`${weight} 16px "UDEV Gothic"`, 'ABC')))).toBe(true);
+  await page.keyboard.press('ArrowRight');
+  for (const [selector, name] of [
+    ['.slide.active p code', 'UDEVGothic-Regular'],
+    ['.slide.active strong code', 'UDEVGothic-Bold'],
+  ]) {
+    const fonts = await renderedFonts(page, selector);
+    expect(fonts.some(font => font.isCustomFont && font.postScriptName === name)).toBe(true);
+  }
+  const fonts = await renderedFonts(page, '.slide.active pre code');
+  expect(fonts.length).toBeGreaterThan(0);
+  expect(fonts.every(font => font.isCustomFont && font.familyName === 'UDEV Gothic')).toBe(true);
+  const widths = await page.locator('.slide.active pre code').evaluate(node => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const style = getComputedStyle(node);
+    context.font = `${style.fontSize} ${style.fontFamily}`;
+    return ['ii', 'WW', '日本', 'ABCD'].map(text => context.measureText(text).width);
+  });
+  expect(widths[0]).toBeCloseTo(widths[1], 2);
+  expect(widths[2]).toBeCloseTo(widths[3], 2);
+  await expect(page.locator('#warnings')).toBeHidden();
+  const pdf = await page.pdf({ preferCSSPageSize: true, path: info.outputPath('code.pdf') });
+  const raw = pdf.toString('latin1');
+  expect(raw).toMatch(/\/BaseFont\s*\/(?:[A-Z]{6}\+)?UDEVGothic-Regular(?:[\s/]|$)/);
+  expect(raw).toContain('UDEVGothic-Bold');
+  expect(raw).toContain('IBMPlexSansJP');
+  expect(raw).toContain('/FontFile2');
 });

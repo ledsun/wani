@@ -33,11 +33,13 @@ Dir.mktmpdir("wani-installed-") do |directory|
     abort "Installed wasm differs from build" unless Digest::SHA256.file(File.join(installed_root, "assets/wani.wasm")).hexdigest == Digest::SHA256.file(File.join(root, "assets/wani.wasm")).hexdigest
     timer_image = "assets/time-expired.webp"
     abort "Installed timer image differs from source" unless Digest::SHA256.file(File.join(installed_root, timer_image)).hexdigest == Digest::SHA256.file(File.join(root, timer_image)).hexdigest
-    %w[Regular Bold].each do |weight|
-      relative = "assets/fonts/IBMPlexSansJP-#{weight}.woff2"
+    %w[IBMPlexSansJP UDEVGothic].product(%w[Regular Bold]).each do |family, weight|
+      extension = family == "UDEVGothic" ? "ttf" : "woff2"
+      relative = "assets/fonts/#{family}-#{weight}.#{extension}"
       abort "Installed #{weight} font differs from source" unless Digest::SHA256.file(File.join(installed_root, relative)).hexdigest == Digest::SHA256.file(File.join(root, relative)).hexdigest
     end
     abort "Font license missing from gem" unless File.file?(File.join(installed_root, "third_party/ibm-plex-sans-jp/LICENSE.txt"))
+    abort "UDEV Gothic license missing from gem" unless File.file?(File.join(installed_root, "third_party/udev-gothic/LICENSE.txt"))
     stdin, stdout, stderr, wait = Open3.popen3(env, RbConfig.ruby, executable, "serve", "--port", "0", chdir: talk)
     begin
       line = Timeout.timeout(10) { stdout.gets }
@@ -48,6 +50,7 @@ Dir.mktmpdir("wani-installed-") do |directory|
       abort "Installed server did not serve Markdown" unless http.get("/talk/slides.md").code == "200"
       abort "Installed wasm unavailable" unless http.head("/assets/wani.wasm")["Content-Type"] == "application/wasm"
       abort "Installed font unavailable" unless http.head("/assets/fonts/IBMPlexSansJP-Regular.woff2")["Content-Type"] == "font/woff2"
+      abort "Installed UDEV Gothic font unavailable" unless http.head("/assets/fonts/UDEVGothic-Regular.ttf")["Content-Type"] == "font/ttf"
       Process.kill("INT", wait.pid)
       abort "Installed server failed to stop" unless Timeout.timeout(10) { wait.value }.success?
       puts "Installed gem: new / check / serve / browser assets / SIGINT all passed"

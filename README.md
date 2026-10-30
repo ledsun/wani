@@ -216,10 +216,12 @@ Ctrl+P でも印刷できます。
 通常と太字のフォントを gem に同梱します。
 
 本文・タイトル・発表者画面・PDF に同じ書体を使います。
-コードは等幅フォントを優先し、日本語の代替候補に IBM Plex Sans JP を指定します。
+コードには **UDEV Gothic** を使い、日本語も半角1:全角2の等幅で表示します。
+UDEV Gothic も通常・太字を同梱するため、外部への通信やOSへのインストールは不要です。
 
 フォントは SIL Open Font License 1.1 です。原文のライセンス・著作権表示と配布元・チェックサムは
-[third_party/ibm-plex-sans-jp](third_party/ibm-plex-sans-jp/README.md) に保持しています。
+[third_party/ibm-plex-sans-jp](third_party/ibm-plex-sans-jp/README.md) と
+[third_party/udev-gothic](third_party/udev-gothic/README.md) に保持しています。
 
 ## フォントを変更する
 
