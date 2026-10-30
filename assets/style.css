@@ -55,6 +55,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .titleless .body img { margin-inline: auto; }
 .body ul, .body ol { margin: .2em 0 .4em; padding-left: 1.35em; }
 .body pre { margin: .3em 0; padding: .4em .55em; background: #f3f6f2; white-space: pre-wrap; tab-size: 2; }
+.titleless .body pre { width: fit-content; max-width: 100%; margin-inline: auto; text-align: left; }
 .body code { font-family: "UDEV Gothic", "IBM Plex Sans JP", monospace; font-size: .8em; }
 .body blockquote { border-left: .08em solid #b6cbb9; margin: .4em 0; padding-left: .6em; }
 .body table { border-collapse: collapse; width: 100%; }
