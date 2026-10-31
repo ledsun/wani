@@ -14,15 +14,6 @@ waniは文字サイズを自動調整するプレゼンテーションツール�
 最後の5秒は観客と一緒にカウントダウン。
 時間になるとワニが登場し、発表のフィナーレを飾ります。
 
-<p align="center">
-  <img src="docs/images/wani-characters.png" alt="ノートパソコンを使う兎と、それを見守るワニ" width="640">
-</p>
-
-<p align="center">
-  <img src="docs/images/rabbit.png" alt="ノートパソコンを持った兎" width="240">
-  <img src="docs/images/wani.png" alt="笑顔のワニ" width="240">
-</p>
-
 ## インストールと開始
 
 ### インストール
