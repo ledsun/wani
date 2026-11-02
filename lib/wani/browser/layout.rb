@@ -5,6 +5,7 @@ module Wani
       HEIGHT = 1080
       BODY_MIN = 16
       BODY_MAX = 160
+      COVER_BODY_SIZE = 48
       TITLE_MIN = 24
       TITLE_MAX = 220
       NO_WRAP_EMS = 20
@@ -60,8 +61,26 @@ module Wani
         body = section.querySelector(".body")
         prepare_wrapping(body)
         fit_images(body)
-        fit_font(body, BODY_MIN, BODY_MAX)
-        @warn.call("スライド #{number}: 本文が収まりません: #{body[:textContent].to_s[0, 120]}") unless fits?(body)
+        if section[:classList].contains("cover") == JS::True
+          body[:style][:fontSize] = "#{COVER_BODY_SIZE}px"
+        else
+          fit_font(body, BODY_MIN, BODY_MAX)
+        end
+        body_fits = if section[:classList].contains("cover") == JS::True
+          cover_body_fits?(body)
+        else
+          fits?(body)
+        end
+        @warn.call("スライド #{number}: 本文が収まりません: #{body[:textContent].to_s[0, 120]}") unless body_fits
+        if section[:classList].contains("cover") == JS::True && title[:style][:display].to_s != "none"
+          title_rect = title.getBoundingClientRect
+          overlap = body[:children].to_a.any? do |child|
+            rect = child.getBoundingClientRect
+            rect[:top].to_f < title_rect[:bottom].to_f && rect[:bottom].to_f > title_rect[:top].to_f &&
+              rect[:left].to_f < title_rect[:right].to_f && rect[:right].to_f > title_rect[:left].to_f
+          end
+          @warn.call("スライド #{number}: タイトルと本文が重なっています") if overlap
+        end
         footnote = section.querySelector(".page-footnote")
         if footnote[:scrollWidth].to_i > footnote[:clientWidth].to_i + 1
           @warn.call("スライド #{number}: 脚注が1行に収まりません。短くするか、詳細を本文へ移してください。")
@@ -117,6 +136,15 @@ module Wani
 
       def fits?(node)
         node[:scrollWidth].to_i <= node[:clientWidth].to_i + 1 && node[:scrollHeight].to_i <= node[:clientHeight].to_i + 1
+      end
+
+      def cover_body_fits?(body)
+        bounds = body.getBoundingClientRect
+        body[:scrollWidth].to_i <= body[:clientWidth].to_i + 1 && body[:children].to_a.all? do |child|
+          rect = child.getBoundingClientRect
+          rect[:top].to_f >= bounds[:top].to_f - 1 && rect[:bottom].to_f <= bounds[:bottom].to_f + 1 &&
+            rect[:left].to_f >= bounds[:left].to_f - 1 && rect[:right].to_f <= bounds[:right].to_f + 1
+        end
       end
 
       def fit_font(node, minimum, maximum)

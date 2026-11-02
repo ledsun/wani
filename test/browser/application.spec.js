@@ -94,7 +94,41 @@ test('failed images and overflow display slide number and content', async ({ pag
     })).toBe(true);
     await expect(page.locator('#warnings')).toBeInViewport({ ratio: 1 });
   }
-  await expect(page.locator('#stage .body')).toHaveCSS('font-size', '16px');
+  await expect(page.locator('#stage .body')).toHaveCSS('font-size', '48px');
+});
+
+test('cover centers its title and places a fixed right-aligned body on the right', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '# Cover title\n\nFirst line  \nSecond line\n\n---\n\n# Next slide\n\nBody' }));
+  await ready(page);
+  const cover = page.locator('.slide.active');
+  await expect(cover.locator('.body')).toHaveCSS('font-size', '48px');
+  await expect(cover.locator('.body')).toHaveCSS('text-align', 'right');
+  const positions = await cover.evaluate(slide => {
+    const bounds = slide.getBoundingClientRect();
+    const title = slide.querySelector('.title').getBoundingClientRect();
+    const paragraph = slide.querySelector('.body p').getBoundingClientRect();
+    return { titleY: (title.top + title.bottom) / 2 - bounds.top, centerY: bounds.height / 2,
+      titleX: (title.left + title.right) / 2, bodyRight: paragraph.right, bodyBottom: paragraph.bottom,
+      contentRight: slide.querySelector('.body').getBoundingClientRect().right, contentBottom: slide.querySelector('.body').getBoundingClientRect().bottom, centerX: (bounds.left + bounds.right) / 2 };
+  });
+  expect(positions.titleY).toBeCloseTo(positions.centerY, 0);
+  expect(positions.titleX).toBeCloseTo(positions.centerX, 0);
+  expect(positions.bodyRight).toBeCloseTo(positions.contentRight, 0);
+  expect(positions.bodyBottom).toBeCloseTo(positions.contentBottom, 0);
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('.slide.active .body')).not.toHaveCSS('font-size', '48px');
+});
+
+test('warns when cover body overlaps its title', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '# Cover\n\n' + Array(12).fill('A line of text').join('  \n') }));
+  await ready(page);
+  await expect(page.locator('#warnings')).toContainText('スライド 1: タイトルと本文が重なっています');
+});
+
+test('does not warn when a short cover body fits', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '# AIコーディング時代のプログラマー\n\n株式会社ラグザイア  \n中島滋  \n2026/06/19 MM' }));
+  await ready(page);
+  await expect(page.locator('#warnings')).toBeHidden();
 });
 
 test('Ruby enters and exits fullscreen with keyboard shortcuts', async ({ page }) => {
