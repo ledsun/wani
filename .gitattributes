@@ -1,0 +1,4 @@
+# Exclude E2E tests and experiments from GitHub language statistics.
+/test/browser/** -linguist-detectable
+/experiments/** -linguist-detectable
+/playwright.config.js -linguist-detectable
