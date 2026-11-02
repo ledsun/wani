@@ -88,6 +88,30 @@ test('reduced motion leaves the rabbit at the correct position', async ({ page }
   await expect(page.locator('.slide.active .rabbit-image')).toHaveCSS('scale', '-1 1');
 });
 
+test('rabbit stays airborne until it reaches its destination', async ({ page }) => {
+  await ready(page);
+  await page.keyboard.press('End');
+  const samples = await page.locator('.slide.active .decorations').evaluate(scene => {
+    const position = scene.querySelector('.rabbit-position');
+    const image = scene.querySelector('.rabbit-image');
+    const animations = [position.getAnimations()[0], image.getAnimations()[0]];
+    animations.forEach(animation => animation.pause());
+    return [0, 0.25, 0.5, 0.9, 1].map(fraction => {
+      animations.forEach(animation => { animation.currentTime = 450 * fraction; });
+      return {
+        x: parseFloat(getComputedStyle(position).left),
+        y: new DOMMatrixReadOnly(getComputedStyle(image).transform).m42,
+      };
+    });
+  });
+  const [start, rising, peak, nearEnd, end] = samples;
+  expect(rising.y).toBeLessThan(-48);
+  expect(peak.y).toBeCloseTo(-60, 1);
+  expect(nearEnd.y).toBeLessThan(-12);
+  expect(end.y).toBeCloseTo(0, 1);
+  expect((nearEnd.x - start.x) / (end.x - start.x)).toBeCloseTo(0.9, 2);
+});
+
 test('a single-slide presentation starts with one wani and hides it when printing', async ({ page }) => {
   await ready(page, '# Only slide');
   await expect(page.locator('.slide.active .bridge-segment[data-present="true"]')).toHaveCount(1);
