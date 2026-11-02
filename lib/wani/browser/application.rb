@@ -17,6 +17,8 @@ module Wani
         response = JS.global.fetch("/talk/slides.md").await
         raise "Markdown を読み込めません (HTTP #{response[:status].to_i})" unless response[:ok] == JS::True
         @presentation = Core::Parser.new.parse(response.text.await.to_s)
+        title = @presentation.slides.first.title
+        @document[:title] = title unless title.empty?
         @presentation.diagnostics.each { |item| warn("#{item.slide ? "スライド #{item.slide}: " : ""}#{item.message}") }
         @renderer = Renderer.new(@document, @presentation)
         @sections = @presentation.slides.map { |slide| @renderer.slide(slide) }
