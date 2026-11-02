@@ -36,8 +36,6 @@ module Wani
           element("start-overlay")[:hidden] = false
           element("viewport")[:inert] = true
           element("start-presentation").focus
-        else
-          start_timer
         end
         element("status")[:textContent] = "準備できました"
       end

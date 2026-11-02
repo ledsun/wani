@@ -64,7 +64,7 @@ test('zero disables the timer', async ({ page }) => {
   await expect(page.locator('#position')).toHaveText('2 / 2');
 });
 
-test('resume button recovers and reload starts a fresh timer', async ({ page }) => {
+test('resume button recovers and reload with a slide hash leaves the timer off', async ({ page }) => {
   await ready(page, 0.1);
   await page.clock.fastForward(6_100);
   await expect(page.locator('#time-expired')).toBeVisible();
@@ -73,7 +73,10 @@ test('resume button recovers and reload starts a fresh timer', async ({ page }) 
   await page.reload();
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   await expect(page.locator('#time-expired')).toBeHidden();
-  await expect(page.locator('#countdown')).toBeVisible();
+  await expect(page.locator('#start-overlay')).toBeHidden();
+  await expect(page.locator('#countdown')).toBeHidden();
+  await page.clock.fastForward(60_000);
+  await expect(page.locator('#time-expired')).toBeHidden();
 });
 
 test('last five seconds grow progressively and shrink back in 0.8 seconds', async ({ page }) => {
@@ -147,9 +150,9 @@ test('starting on the final slide, including a single slide, never expires', asy
   await expect(page.locator('#countdown')).toBeHidden();
   await expect(page.locator('#time-expired')).toBeHidden();
   await page.keyboard.press('Home');
-  await expect(page.locator('#countdown')).toBeVisible();
-  await page.clock.fastForward(6_100);
-  await expect(page.locator('#time-expired')).toBeVisible();
+  await page.clock.fastForward(60_000);
+  await expect(page.locator('#countdown')).toBeHidden();
+  await expect(page.locator('#time-expired')).toBeHidden();
 });
 
 
@@ -176,14 +179,22 @@ test('without a hash the first slide waits for Start before counting time', asyn
   await expect(page.locator('#time-expired')).toBeVisible();
 });
 
-test('a hash starts the timer immediately without the start overlay', async ({ page }) => {
-  await page.goto('/#slide=1');
+test('a slide hash skips Start and never starts the timer', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\ntime_limit: 0.1\n---\n# First\n\n---\n\n# Second\n\n---\n\n# Last' }));
+  await page.goto('/#slide=2');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 100));
   await expect(page.locator('#start-overlay')).toBeHidden();
-  await page.keyboard.press('ArrowRight');
   await expect(page.locator('#position')).toHaveText('2 / 3');
+  await page.clock.fastForward(60_000);
+  await expect(page.locator('#countdown')).toBeHidden();
+  await expect(page.locator('#time-expired')).toBeHidden();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('#position')).toHaveText('1 / 3');
+  await page.clock.fastForward(60_000);
+  await expect(page.locator('#time-expired')).toBeHidden();
 });
-
 
 test('presentation waits for the timeout image to decode before becoming ready', async ({ page }) => {
   let release;
