@@ -31,8 +31,10 @@ Dir.mktmpdir("wani-installed-") do |directory|
     installed_root = capture!(env, RbConfig.ruby, "-rwani", "-e", "puts Wani::ROOT").strip
     abort "Source checkout was used instead of installed gem" unless installed_root.start_with?(home + File::SEPARATOR)
     abort "Installed wasm differs from build" unless Digest::SHA256.file(File.join(installed_root, "assets/wani.wasm")).hexdigest == Digest::SHA256.file(File.join(root, "assets/wani.wasm")).hexdigest
-    timer_image = "assets/time-expired.webp"
-    abort "Installed timer image differs from source" unless Digest::SHA256.file(File.join(installed_root, timer_image)).hexdigest == Digest::SHA256.file(File.join(root, timer_image)).hexdigest
+    timer_images = (1..4).map { |number| "assets/time-expired-#{number}.webp" }
+    timer_images.each do |timer_image|
+      abort "Installed #{timer_image} differs from source" unless Digest::SHA256.file(File.join(installed_root, timer_image)).hexdigest == Digest::SHA256.file(File.join(root, timer_image)).hexdigest
+    end
     %w[IBMPlexSansJP UDEVGothic].product(%w[Regular Bold]).each do |family, weight|
       extension = family == "UDEVGothic" ? "ttf" : "woff2"
       relative = "assets/fonts/#{family}-#{weight}.#{extension}"
@@ -46,7 +48,9 @@ Dir.mktmpdir("wani-installed-") do |directory|
       uri = URI(line[/http:\/\/\S+/])
       http = Net::HTTP.new(uri.host, uri.port, nil)
       abort "Installed server did not serve HTML" unless http.get("/").code == "200"
-      abort "Installed server did not serve timer image" unless http.get("/assets/time-expired.webp").code == "200"
+      timer_images.each do |timer_image|
+        abort "Installed server did not serve #{timer_image}" unless http.get("/#{timer_image}").code == "200"
+      end
       abort "Installed server did not serve Markdown" unless http.get("/talk/slides.md").code == "200"
       abort "Installed wasm unavailable" unless http.head("/assets/wani.wasm")["Content-Type"] == "application/wasm"
       abort "Installed font unavailable" unless http.head("/assets/fonts/IBMPlexSansJP-Regular.woff2")["Content-Type"] == "font/woff2"
