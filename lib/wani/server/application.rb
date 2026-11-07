@@ -46,7 +46,7 @@ module Wani
         if type.start_with?("image/")
           headers["Content-Security-Policy"] = "sandbox; default-src 'none'; style-src 'unsafe-inline'"
         else
-          headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: http:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+          headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: http:; connect-src 'self'; frame-src https://www.youtube.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
         end
         body = File.binread(file)
         report_font(body.dup.force_encoding(Encoding::UTF_8)) if path == "/talk/slides.md" && @diagnostics

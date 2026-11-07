@@ -83,6 +83,14 @@ module Wani
           next if event[:ctrlKey] == JS::True || event[:altKey] == JS::True || event[:metaKey] == JS::True
           next if %w[INPUT TEXTAREA SELECT].include?(target[:tagName].to_s) || target[:isContentEditable] == JS::True
           next if @waiting_to_start && !%w[f F Escape n N].include?(event[:key].to_s)
+          if event[:key].to_s == "Escape"
+            close = @sections[@index].querySelector(".youtube-close")
+            unless close == JS::Null
+              close.click
+              event.preventDefault
+              next
+            end
+          end
           handled = true
           case event[:key].to_s
           when "ArrowRight", " ", "PageDown" then go(@index + 1)
@@ -117,6 +125,9 @@ module Wani
         end
         previous_number = @active_number || 0
         @index = index.clamp(0, @sections.length - 1)
+        if previous_number.positive? && previous_number != @index + 1
+          @sections[previous_number - 1].querySelectorAll(".youtube-overlay").to_a.each(&:remove)
+        end
         @renderer.transition(@sections[@index], previous_number)
         @sections.each_with_index { |section, number| section[:classList].toggle("active", number == @index) }
         @active_number = @index + 1
@@ -184,6 +195,7 @@ module Wani
         @presentation.slides.each_with_index do |slide, index|
           [false, *(notes ? [true] : [])].each do |is_note|
             section = is_note ? @renderer.slide(slide, notes: true) : @sections[index].cloneNode(true)
+            section.querySelectorAll(".youtube-overlay").to_a.each(&:remove)
             if is_note
               element("stage").appendChild(section)
               @layout.wait_assets(section)

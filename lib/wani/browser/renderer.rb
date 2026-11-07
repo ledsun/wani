@@ -21,6 +21,14 @@ module Wani
         body = child(section, "div", "body")
         body[:innerHTML] = notes ? slide.notes_html : slide.html
         resolve_links(body)
+        body.querySelectorAll("p").to_a.each do |paragraph|
+          children = paragraph[:children].to_a
+          next unless children.length == 1 && children.first[:classList].contains("youtube-video") == JS::True
+          copy = paragraph.cloneNode(true)
+          copy.querySelector(".youtube-video").remove
+          paragraph[:classList].add("youtube-only") if copy[:textContent].to_s.strip.empty?
+        end
+        prepare_videos(body)
         footer = child(section, "footer", "slide-footer")
         child(footer, "span", "page-footnote")[:textContent] = slide.page_footnote
         number = child(footer, "span", "slide-number")
@@ -61,6 +69,32 @@ module Wani
         scene.querySelectorAll(".bridge-segment").to_a.each_with_index do |segment, index|
           appearing = index >= BridgeProgress::SEGMENTS - current.sharks && index < BridgeProgress::SEGMENTS - previous.sharks
           segment.setAttribute("data-appearing", appearing.to_s)
+        end
+      end
+
+      def prepare_videos(root)
+        root.querySelectorAll(".youtube-video").to_a.each do |video|
+          button = video.querySelector(".youtube-play")
+          button.addEventListener("click") do
+            section = video.closest(".slide")
+            next unless section.querySelector(".youtube-overlay") == JS::Null
+            overlay = child(section, "div", "youtube-overlay")
+            frame = child(overlay, "iframe", "youtube-frame")
+            url = video.getAttribute("data-youtube-src").to_s
+            frame[:src] = "#{url}#{url.include?("?") ? "&" : "?"}autoplay=1"
+            frame[:title] = button.getAttribute("aria-label")
+            frame.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share")
+            frame.setAttribute("allowfullscreen", "")
+            close = child(overlay, "button", "youtube-close")
+            close[:type] = "button"
+            close[:textContent] = "閉じる ×"
+            close.setAttribute("aria-label", "動画を閉じる")
+            close.addEventListener("click") do
+              overlay.remove
+              button.focus
+            end
+            close.focus
+          end
         end
       end
 

@@ -44,7 +44,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 #status { font-size: 12px; margin: 0; padding: 8px 24px; color: #607569; min-height: 30px; }
 #viewport { width: 100%; flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 20px; }
 #stage { flex: 0 0 1920px; transform-origin: center; box-shadow: 0 8px 48px #20352e18; }
-.slide { width: 1920px; height: 1080px; padding: 64px 80px 48px; display: flex; flex-direction: column; overflow: hidden; background: white; color: #172b24; }
+.slide { position: relative; width: 1920px; height: 1080px; padding: 64px 80px 48px; display: flex; flex-direction: column; overflow: hidden; background: white; color: #172b24; }
 .title { margin: 0 0 36px; white-space: nowrap; flex: 0 0 160px; font-weight: 700; line-height: 1.12; overflow: hidden; letter-spacing: -.025em; }
 .body { flex: 1 1 0; min-height: 0; overflow: hidden; line-height: 1.3; }
 .body p { margin: 0 0 .35em; }
@@ -66,6 +66,17 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .body th, .body td { border: 1px solid #bac8bd; padding: .15em .3em; }
 .body img { display: block; object-fit: contain; max-width: 100%; }
 .body a { color: #32634b; }
+.body p:has(.youtube-video) { margin-bottom: 0; }
+.body p.youtube-only { width: 100%; text-align: center; }
+.youtube-video { display: inline-block; position: relative; vertical-align: top; max-width: 100%; }
+.youtube-video img { aspect-ratio: 16 / 9; object-fit: cover; }
+.youtube-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #e00; color: white; border: 0; border-radius: 14px; font-size: 48px; padding: 8px 32px; }
+.youtube-play:hover { background: #b00; }
+.youtube-overlay { position: absolute; inset: 0; z-index: 10; background: black; }
+.youtube-frame { width: 100%; height: 100%; border: 0; }
+.youtube-close { position: absolute; z-index: 1; top: 24px; right: 24px; padding: 12px 20px; font-size: 28px; background: #202020e8; color: white; border-color: white; }
+.youtube-close:hover { background: #444; }
+@media print { .youtube-overlay, .youtube-play { display: none !important; } }
 .slide-footer { flex: 0 0 128px; position: relative; display: flex; align-items: start; font-size: 24px; color: #71887e; padding-top: 12px; }
 .page-footnote { width: 100%; min-width: 0; height: 1.5em; line-height: 1.5; white-space: nowrap; overflow: hidden; }
 .decorations { position: absolute; left: 0; right: 132px; bottom: 0; height: 80px; }

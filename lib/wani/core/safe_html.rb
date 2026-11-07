@@ -16,6 +16,21 @@ module Wani
         !scheme || (image ? %w[http https] : %w[http https mailto]).include?(scheme.downcase)
       end
 
+      # Accept only an explicit, canonical YouTube video URL and numeric bounds.
+      def self.youtube(value)
+        return nil unless value.is_a?(String)
+        match = value.match(%r{\Ahttps://(?:www\.)?youtube\.com/watch\?([^#]+)\z})
+        return nil unless match
+        pairs = match[1].split("&", -1).map { |part| part.split("=", 2) }
+        return nil unless pairs.all? { |key, val| %w[v start end].include?(key) && val && !val.empty? }
+        return nil unless pairs.map(&:first).uniq.length == pairs.length
+        params = pairs.to_h
+        return nil unless params["v"]&.match?(/\A[A-Za-z0-9_-]{11}\z/)
+        return nil unless %w[start end].all? { |key| !params[key] || params[key].match?(/\A\d{1,8}\z/) }
+        return nil if params["end"] && params["end"].to_i <= (params["start"] || "0").to_i
+        params
+      end
+
       def initialize(&diagnostic)
         @diagnostic = diagnostic || ->(_message) {}
       end
@@ -37,7 +52,14 @@ module Wani
             body
           end
         when :img
-          if self.class.safe_url?(node.attr["src"], image: true)
+          if (video = self.class.youtube(node.attr["src"]))
+            id = video.fetch("v")
+            query = %w[start end].filter_map { |key| "#{key}=#{video[key]}" if video[key] }.join("&")
+            url = "https://www.youtube.com/embed/#{id}"
+            url += "?#{query}" unless query.empty?
+            alt = self.class.escape(node.attr["alt"])
+            "<span class=\"youtube-video\" data-youtube-src=\"#{self.class.escape(url)}\"><img src=\"https://i.ytimg.com/vi/#{id}/hqdefault.jpg\" alt=\"#{alt}\"><button type=\"button\" class=\"youtube-play\" aria-label=\"#{alt.empty? ? 'YouTube動画を再生' : alt + 'を再生'}\">▶</button></span>"
+          elsif self.class.safe_url?(node.attr["src"], image: true)
             "<img src=\"#{self.class.escape(node.attr['src'])}\" alt=\"#{self.class.escape(node.attr['alt'])}\">"
           else
             @diagnostic.call("Unsafe image URL removed")

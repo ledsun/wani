@@ -164,13 +164,19 @@ module Wani
       def fit_images(body)
         images = body.querySelectorAll("img").to_a
         return if images.empty?
-        mixed = !body[:textContent].to_s.strip.empty?
-        budget = body[:clientHeight].to_f * (mixed ? 0.45 : 0.85) / images.length
+        content = body.cloneNode(true)
+        content.querySelectorAll(".youtube-video").to_a.each(&:remove)
+        mixed = !content[:textContent].to_s.strip.empty?
+        videos_only = images.all? { |image| image.closest(".youtube-video") != JS::Null }
+        fraction = mixed ? 0.45 : (videos_only ? 0.98 : 0.85)
+        budget = body[:clientHeight].to_f * fraction / images.length
         images.each do |image|
           next if image[:naturalWidth].to_i.zero? || image[:naturalHeight].to_i.zero?
-          ratio = [body[:clientWidth].to_f / image[:naturalWidth].to_f, budget / image[:naturalHeight].to_f].min
-          image[:style][:width] = "#{image[:naturalWidth].to_f * ratio}px"
-          image[:style][:height] = "#{image[:naturalHeight].to_f * ratio}px"
+          width = image[:naturalWidth].to_f
+          height = image.closest(".youtube-video") == JS::Null ? image[:naturalHeight].to_f : width * 9 / 16
+          ratio = [body[:clientWidth].to_f / width, budget / height].min
+          image[:style][:width] = "#{width * ratio}px"
+          image[:style][:height] = "#{height * ratio}px"
         end
       end
     end
