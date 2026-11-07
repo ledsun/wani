@@ -3,18 +3,29 @@ module Wani
     class Application
       private
 
-      # Decode the actual displayed image before enabling presentation controls.
+      # Decode the candidates before enabling presentation controls.
       def prepare_timer_image
         return if @presentation.time_limit.zero?
 
-        element("time-expired-image").decode.await
-      rescue JS::Error
-        warn("時間切れの画像を読み込めませんでした")
+        @timer_images = (1..4).map do |number|
+          image = @document.createElement("img")
+          image[:src] = "/assets/time-expired-#{number}.webp"
+          image
+        end
+        @timer_images.each do |image|
+          begin
+            image.decode.await
+          rescue JS::Error
+            warn("時間切れの画像を読み込めませんでした")
+          end
+        end
       end
 
       def start_timer
         return if @presentation.time_limit.zero?
 
+        selected = (JS.global[:Math].random.to_f * @timer_images.length).floor
+        element("time-expired-image")[:src] = @timer_images[selected][:src]
         @deadline = JS.global[:Date].now.to_f + @presentation.time_limit * 60_000
         element("resume-slides").addEventListener("click") { go(@index) }
         @timer_callback = -> { tick_timer }

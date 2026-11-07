@@ -25,9 +25,8 @@ test('default five minutes counts down and expires before the final slide, then 
   await page.clock.fastForward(29_900);
   await expect(page.locator('#time-expired')).toBeVisible();
   await expect(page.locator('#countdown')).toBeHidden();
-  const image = await page.request.get('/assets/time-expired.webp');
-  expect(image.ok()).toBe(true);
-  expect(image.headers()['content-type']).toBe('image/webp');
+  const image = page.locator('#time-expired-image');
+  expect(await image.evaluate(img => img.complete && img.naturalWidth === 1200)).toBe(true);
   await expect(page.locator('#next')).toBeEnabled();
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('#time-expired')).toBeHidden();
@@ -201,7 +200,7 @@ test('presentation waits for the timeout image to decode before becoming ready',
   const gate = new Promise(resolve => { release = resolve; });
   let requested;
   const request = new Promise(resolve => { requested = resolve; });
-  await page.route('**/assets/time-expired.webp', async route => {
+  await page.route('**/assets/time-expired-*.webp', async route => {
     requested();
     await gate;
     await route.continue();
@@ -213,15 +212,28 @@ test('presentation waits for the timeout image to decode before becoming ready',
   release();
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   await expect(page.getByRole('button', { name: 'スタート', exact: true })).toBeVisible();
-  const image = page.locator('#time-expired-image');
-  expect(await image.evaluate(img => img.complete && img.naturalWidth === 1086)).toBe(true);
-  await image.evaluate(img => img.decode());
+  await page.getByRole('button', { name: 'スタート', exact: true }).click();
+  await page.locator('#time-expired-image').evaluate(img => img.decode());
 });
 
 test('a failed timeout image warns without preventing presentation startup', async ({ page }) => {
-  await page.route('**/assets/time-expired.webp', route => route.abort());
+  await page.route('**/assets/time-expired-*.webp', route => route.abort());
   await ready(page, 0.1);
   await expect(page.locator('#warnings')).toContainText('時間切れの画像を読み込めませんでした');
   await page.clock.fastForward(6_100);
   await expect(page.locator('#time-expired')).toBeVisible();
+});
+
+
+test('each timer start selects one of the four decoded WebP images', async ({ page }) => {
+  await page.addInitScript(() => { Math.random = () => Number(new URL(location.href).searchParams.get('random')); });
+  for (let index = 0; index < 4; index++) {
+    await page.goto(`/?random=${(index + 0.5) / 4}`);
+    await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+    await page.getByRole('button', { name: 'スタート', exact: true }).click();
+    await expect(page.locator('#time-expired-image')).toHaveAttribute('src', new RegExp(`time-expired-${index + 1}\\.webp$`));
+    const response = await page.request.get(`/assets/time-expired-${index + 1}.webp`);
+    expect(response.ok()).toBe(true);
+    expect(response.headers()['content-type']).toBe('image/webp');
+  }
 });
