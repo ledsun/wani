@@ -35,12 +35,12 @@ Dir.mktmpdir("wani-installed-") do |directory|
     timer_images.each do |timer_image|
       abort "Installed #{timer_image} differs from source" unless Digest::SHA256.file(File.join(installed_root, timer_image)).hexdigest == Digest::SHA256.file(File.join(root, timer_image)).hexdigest
     end
-    %w[IBMPlexSansJP UDEVGothic].product(%w[Regular Bold]).each do |family, weight|
-      extension = family == "UDEVGothic" ? "ttf" : "woff2"
+    %w[ZenKakuGothicNew UDEVGothic].product(%w[Regular Bold]).each do |family, weight|
+      extension = "ttf"
       relative = "assets/fonts/#{family}-#{weight}.#{extension}"
       abort "Installed #{weight} font differs from source" unless Digest::SHA256.file(File.join(installed_root, relative)).hexdigest == Digest::SHA256.file(File.join(root, relative)).hexdigest
     end
-    abort "Font license missing from gem" unless File.file?(File.join(installed_root, "third_party/ibm-plex-sans-jp/LICENSE.txt"))
+    abort "Font license missing from gem" unless File.file?(File.join(installed_root, "assets/fonts/ZenKakuGothicNew-OFL.txt"))
     abort "UDEV Gothic license missing from gem" unless File.file?(File.join(installed_root, "third_party/udev-gothic/LICENSE.txt"))
     stdin, stdout, stderr, wait = Open3.popen3(env, RbConfig.ruby, executable, "serve", "--port", "0", chdir: talk)
     begin
@@ -53,7 +53,7 @@ Dir.mktmpdir("wani-installed-") do |directory|
       end
       abort "Installed server did not serve Markdown" unless http.get("/talk/slides.md").code == "200"
       abort "Installed wasm unavailable" unless http.head("/assets/wani.wasm")["Content-Type"] == "application/wasm"
-      abort "Installed font unavailable" unless http.head("/assets/fonts/IBMPlexSansJP-Regular.woff2")["Content-Type"] == "font/woff2"
+      abort "Installed font unavailable" unless http.head("/assets/fonts/ZenKakuGothicNew-Regular.ttf")["Content-Type"] == "font/ttf"
       abort "Installed UDEV Gothic font unavailable" unless http.head("/assets/fonts/UDEVGothic-Regular.ttf")["Content-Type"] == "font/ttf"
       Process.kill("INT", wait.pid)
       abort "Installed server failed to stop" unless Timeout.timeout(10) { wait.value }.success?

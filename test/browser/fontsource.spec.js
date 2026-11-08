@@ -19,7 +19,7 @@ async function setup(page, { missing = false, broken = false, markdown = source 
       if (broken) return route.abort();
       await new Promise(resolve => setTimeout(resolve, 400));
       const bold = route.request().url().includes('700.woff2');
-      await route.fulfill({ contentType: 'font/woff2', body: fs.readFileSync(`assets/fonts/IBMPlexSansJP-${bold ? 'Bold' : 'Regular'}.woff2`) });
+      await route.fulfill({ contentType: 'font/woff2', body: fs.readFileSync(`assets/fonts/UDEVGothic-${bold ? 'Bold' : 'Regular'}.ttf`) });
     });
   }
   // Internet is unavailable; the local presentation server remains available.
@@ -53,7 +53,7 @@ test('project font loads before fitting hidden slides and is embedded in PDF off
     const { nodeId } = await client.send('DOM.querySelector', { nodeId: root.nodeId, selector });
     const { fonts } = await client.send('CSS.getPlatformFontsForNode', { nodeId });
     expect(fonts.length).toBeGreaterThan(0);
-    expect(fonts.every(font => font.isCustomFont && font.familyName.startsWith(live ? 'Noto Sans JP' : 'IBM Plex Sans JP'))).toBe(true);
+    expect(fonts.every(font => font.isCustomFont && font.familyName.startsWith(live ? 'Noto Sans JP' : 'UDEV Gothic'))).toBe(true);
   }
   await assertActualFont('.slide.active .title');
   await assertActualFont('.slide.active .body p');
@@ -63,7 +63,7 @@ test('project font loads before fitting hidden slides and is embedded in PDF off
   if (live) await assertActualFont('.slide.active .body p');
   await client.detach();
   const pdf = await page.pdf({ path: info.outputPath('fontsource.pdf'), preferCSSPageSize: true });
-  expect(pdf.toString('latin1')).toContain(live ? 'NotoSansJP' : 'IBMPlexSansJP');
+  expect(pdf.toString('latin1')).toContain(live ? 'NotoSansJP' : 'UDEVGothic');
   expect(pdf.toString('latin1')).toContain('/FontFile2');
   const task = getDocument({ data: new Uint8Array(pdf), useSystemFonts: false });
   try {
@@ -79,14 +79,14 @@ test('unregistered font warns and falls back', async ({ page }) => {
   test.skip(!!live, 'Mock-only error scenario');
   await setup(page, { missing: true });
   await expect(page.locator('#warnings')).toContainText('未登録のフォント');
-  await expect(page.locator('.slide.active .title')).toHaveCSS('font-family', /IBM Plex Sans JP/);
+  await expect(page.locator('.slide.active .title')).toHaveCSS('font-family', /Zen Kaku Gothic New/);
 });
 
 test('project font download failure warns and falls back before layout', async ({ page }) => {
   test.skip(!!live, 'Mock-only error scenario');
   await setup(page, { broken: true });
   await expect(page.locator('#warnings')).toContainText('フォントを読み込めませんでした');
-  await expect(page.locator('.slide.active .title')).toHaveCSS('font-family', /IBM Plex Sans JP/);
+  await expect(page.locator('.slide.active .title')).toHaveCSS('font-family', /Zen Kaku Gothic New/);
 });
 
 for (const customFont of [true, false]) {

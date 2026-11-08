@@ -26,8 +26,8 @@ class HTTPTest < Minitest::Test
     assert_includes http.get("/").body, "data-ruby-wasm-url"
     assert_equal "text/plain; charset=utf-8", response["Content-Type"]
     assert_equal "application/wasm", http.head("/assets/wani.wasm")["Content-Type"]
-    %w[IBMPlexSansJP UDEVGothic].product(%w[Regular Bold]).each do |family, weight|
-      extension = family == "UDEVGothic" ? "ttf" : "woff2"
+    %w[UDEVGothic ZenKakuGothicNew].product(%w[Regular Bold]).each do |family, weight|
+      extension = "ttf"
       font = http.get("/assets/fonts/#{family}-#{weight}.#{extension}")
       assert_equal "200", font.code
       assert_equal "font/#{extension}", font["Content-Type"]

@@ -49,7 +49,7 @@ module Wani
         end
         @document[:fonts][:ready].await
         style = @document.createElement("style")
-        style[:textContent] = %(.slide .title, .slide .body { font-family: #{family}, "IBM Plex Sans JP", sans-serif; })
+        style[:textContent] = %(.slide .title, .slide .body { font-family: #{family}, "Zen Kaku Gothic New", sans-serif; })
         @document[:head].appendChild(style)
       rescue => error
         link.remove if link

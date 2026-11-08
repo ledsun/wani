@@ -192,11 +192,11 @@ Ctrl+P でも印刷できます。
 
 ## 同梱フォント
 
-日本語・英数字の標準書体は **IBM Plex Sans JP** です。
+日本語・英数字の標準書体は **Zen Kaku Gothic New** です。
 コードは **UDEV Gothic** を使い、日本語も半角1:全角2の等幅で表示します。
 
-フォントは SIL Open Font License 1.1 です。原文のライセンス・著作権表示と配布元・チェックサムは
-[third_party/ibm-plex-sans-jp](third_party/ibm-plex-sans-jp/README.md) と
+フォントは SIL Open Font License 1.1 です。原文のライセンス・著作権表示と UDEV Gothic の配布元・チェックサムは
+[Zen Kaku Gothic New のライセンス](assets/fonts/ZenKakuGothicNew-OFL.txt) と
 [third_party/udev-gothic](third_party/udev-gothic/README.md) に保持しています。
 
 ## フォントを変更する
