@@ -73,6 +73,25 @@ test('body fits, window resize scales and titleless PNG JPEG WebP images load', 
   await expect(page.locator('#warnings')).toBeHidden();
 });
 
+test('adds a modest title gap when a slide has spare space below its body', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '# Cover\n\n---\n\n# 人間とLLMの認知様式のちがい\n\n人間：抽象化・構造化  \nLLM：特徴ベクトルの次元数\n\n---\n\n# Dense\n\n' + Array(14).fill('A line of text').join('  \n') }));
+  await ready(page, '#slide=2');
+  const spacing = await page.locator('.slide.active .body').evaluate(body => ({
+    margin: parseFloat(getComputedStyle(body).marginTop),
+    fits: body.scrollHeight <= body.clientHeight + 1,
+  }));
+  expect(spacing.margin).toBeGreaterThan(0);
+  expect(spacing.margin).toBeLessThanOrEqual(64);
+  expect(spacing.fits).toBe(true);
+  await page.keyboard.press('ArrowRight');
+  const dense = await page.locator('.slide.active .body').evaluate(body => ({
+    margin: parseFloat(getComputedStyle(body).marginTop),
+    fits: body.scrollHeight <= body.clientHeight + 1,
+  }));
+  expect(dense.margin).toBeLessThan(spacing.margin);
+  expect(dense.fits).toBe(true);
+});
+
 test('failed images and overflow display slide number and content', async ({ page }) => {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: '# Overflow\n\n' + 'Unbreakable'.repeat(2000) + '\n\n![bad](missing.svg)' }));
   await ready(page);

@@ -9,6 +9,7 @@ module Wani
       TITLE_MIN = 24
       TITLE_MAX = 220
       NO_WRAP_EMS = 20
+      TITLE_GAP_MAX = 64
 
       def initialize(document, &warn)
         @document, @warn = document, warn
@@ -60,12 +61,14 @@ module Wani
           @warn.call("スライド #{number}: タイトルが収まりません: #{title[:textContent]}") unless fits?(title)
         end
         body = section.querySelector(".body")
+        body[:style][:marginTop] = ""
         prepare_wrapping(body)
         fit_images(body)
         if section[:classList].contains("cover") == JS::True
           body[:style][:fontSize] = "#{COVER_BODY_SIZE}px"
         else
           fit_font(body, BODY_MIN, BODY_MAX)
+          add_title_gap(section, title, body)
         end
         body_fits = if section[:classList].contains("cover") == JS::True
           cover_body_fits?(body)
@@ -108,6 +111,17 @@ module Wani
       end
 
       private
+
+      def add_title_gap(section, title, body)
+        return if title[:style][:display].to_s == "none" || body[:children].to_a.empty? || !fits?(body)
+        scale = section.getBoundingClientRect[:width].to_f / WIDTH
+        return if scale <= 0
+        bottom = body[:children].to_a.map { |child| child.getBoundingClientRect[:bottom].to_f }.max
+        spare = (body.getBoundingClientRect[:bottom].to_f - bottom) / scale
+        gap = [[spare * 0.2, TITLE_GAP_MAX].min, 0].max
+        body[:style][:marginTop] = "#{gap}px"
+        body[:style][:marginTop] = "" unless fits?(body)
+      end
 
       def prepare_wrapping(body)
         # Rebuild the wrappers when a slide is fitted again (for example after
