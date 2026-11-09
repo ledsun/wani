@@ -54,7 +54,9 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .titleless .body > :last-child { margin-bottom: 0; }
 .titleless .body img { margin-inline: auto; }
 .cover .title { margin-top: 396px; text-align: center; }
+.cover.multiline-title .title { margin-top: 316px; flex-basis: 320px; display: flex; align-items: center; justify-content: center; white-space: pre; }
 .cover .body { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; text-align: right; }
+.cover.multiline-title .body { margin-top: -160px; }
 .cover .body > * { flex-shrink: 0; max-width: 100%; }
 .cover .body > :last-child { margin-bottom: 0; }
 .body ul, .body ol { margin: .2em 0 .4em; padding-left: 1.35em; }

@@ -27,6 +27,13 @@ class CoreTest < Minitest::Test
     refute_includes document.slides[0].html, "<h"
   end
 
+  def test_cover_title_preserves_br_as_a_line_break
+    document = parse("# **First**<br>Second<br />Third\n\n---\n\n# Next<br>slide")
+    assert_equal "First\nSecond\nThird", document.slides[0].title
+    assert_equal "Nextslide", document.slides[1].title
+    assert_equal "Literal <br> text", parse('# Literal &lt;br&gt; text').slides[0].title
+  end
+
   def test_separators_inside_code_and_notes_do_not_split
     source = "# Code\n\n```md\n---\n<!-- notes: literal -->\n```\n\n~~~\n---\n~~~\n\n    ---\n\n<!--\nnotes:\nBefore\n\n---\n\nAfter\n-->\n\n---\n\nLast"
     document = parse(source)

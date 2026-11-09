@@ -119,6 +119,34 @@ test('cover centers its title and places a fixed right-aligned body on the right
   await expect(page.locator('.slide.active .body')).not.toHaveCSS('font-size', '48px');
 });
 
+test('cover title preserves explicit line breaks and fits in the center', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '# Rubyで作る<br>プレゼンテーション\n\n発表者' }));
+  await ready(page);
+  const title = page.locator('.slide.active .title');
+  await expect(title).toHaveText('Rubyで作る\nプレゼンテーション');
+  const layout = await title.evaluate(node => {
+    const title = node.getBoundingClientRect();
+    const slide = node.closest('.slide').getBoundingClientRect();
+    return { fits: node.scrollWidth <= node.clientWidth + 1 && node.scrollHeight <= node.clientHeight + 1,
+      center: (title.top + title.bottom - slide.top - slide.bottom) / 2 };
+  });
+  expect(layout.fits).toBe(true);
+  expect(layout.center).toBeCloseTo(0, 0);
+  await expect(page.locator('#warnings')).toBeHidden();
+});
+
+test('moves a multiline cover title above a taller cover body', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '# Kaigi on Rails 2026の<br>DHH\n\n株式会社ラグザイア  \n中島滋  \n2026/11/13 MM' }));
+  await ready(page);
+  const gap = await page.locator('.slide.active').evaluate(slide => {
+    const title = slide.querySelector('.title').getBoundingClientRect();
+    const body = slide.querySelector('.body p').getBoundingClientRect();
+    return body.top - title.bottom;
+  });
+  expect(gap).toBeGreaterThan(0);
+  await expect(page.locator('#warnings')).toBeHidden();
+});
+
 test('warns when cover body overlaps its title', async ({ page }) => {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: '# Cover\n\n' + Array(12).fill('A line of text').join('  \n') }));
   await ready(page);

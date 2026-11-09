@@ -18,6 +18,7 @@ module Wani
           section[:className] = "slide titleless"
         end
         section[:classList].add("cover") if slide.number == 1 && !notes
+        section[:classList].add("multiline-title") if slide.number == 1 && !notes && slide.title.include?("\n")
         body = child(section, "div", "body")
         body[:innerHTML] = notes ? slide.notes_html : slide.html
         resolve_links(body)

@@ -34,7 +34,7 @@ module Wani
           remove(document.root, title) if title
           renderer = SafeHTML.new(&warn)
           note_roots = notes.map { |text| markdown(text).root }
-          Slide.new(number: number, title: title ? plain(title) : "", html: renderer.render(document.root),
+          Slide.new(number: number, title: title ? plain(title, cover: number == 1) : "", html: renderer.render(document.root),
             page_footnote: page_footnotes.empty? ? "" : page_footnotes.last.strip,
             notes_html: note_roots.map { |root| renderer.render(root) }.join,
             images: ([document.root] + note_roots).flat_map { |root| walk(root).select { |node| node.type == :img && SafeHTML.safe_url?(node.attr['src'], image: true) }.map { |node| node.attr['src'] } }.uniq)
@@ -114,12 +114,13 @@ module Wani
         node.children.each { |child| remove(child, target) }
       end
 
-      def plain(node)
+      def plain(node, cover: false)
         case node.type
         when :text, :codespan then node.value
         when :entity then node.value.char
         when :smart_quote then SafeHTML::QUOTES.fetch(node.value, "")
-        else node.children.map { |child| plain(child) }.join
+        when :html_element then cover && node.value == "br" && node.attr.empty? ? "\n" : node.children.map { |child| plain(child, cover: cover) }.join
+        else node.children.map { |child| plain(child, cover: cover) }.join
         end
       end
     end

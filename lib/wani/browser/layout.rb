@@ -54,6 +54,7 @@ module Wani
       def fit_slide(section, number)
         section[:style][:display] = "flex"
         title = section.querySelector(".title")
+        title[:style][:transform] = ""
         unless title[:style][:display].to_s == "none"
           fit_font(title, TITLE_MIN, TITLE_MAX)
           @warn.call("スライド #{number}: タイトルが収まりません: #{title[:textContent]}") unless fits?(title)
@@ -72,6 +73,15 @@ module Wani
           fits?(body)
         end
         @warn.call("スライド #{number}: 本文が収まりません: #{body[:textContent].to_s[0, 120]}") unless body_fits
+        if section[:classList].contains("multiline-title") == JS::True
+          title_rect = title.getBoundingClientRect
+          body_top = body[:children].to_a.map { |child| child.getBoundingClientRect[:top].to_f }.min
+          if body_top
+            scale = section.getBoundingClientRect[:width].to_f / WIDTH
+            shift = (title_rect[:bottom].to_f + 36 * scale - body_top) / scale
+            title[:style][:transform] = "translateY(-#{shift}px)" if shift.positive?
+          end
+        end
         if section[:classList].contains("cover") == JS::True && title[:style][:display].to_s != "none"
           title_rect = title.getBoundingClientRect
           overlap = body[:children].to_a.any? do |child|
