@@ -67,6 +67,9 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .body table { border-collapse: collapse; width: 100%; }
 .body th, .body td { border: 1px solid #bac8bd; padding: .15em .3em; }
 .body img { display: block; object-fit: contain; max-width: 100%; }
+.body.image-columns { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 6%; text-align: left; }
+.image-columns > .image-column-image, .image-columns > .image-column-text { flex: 0 0 47%; min-width: 0; margin: 0; }
+.image-columns > .image-column-image img { margin-inline: auto; }
 .body a { color: #32634b; }
 .body p:has(.youtube-video) { margin-bottom: 0; }
 .body p.youtube-only { width: 100%; text-align: center; }

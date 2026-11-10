@@ -60,7 +60,11 @@ module Wani
             alt = self.class.escape(node.attr["alt"])
             "<span class=\"youtube-video\" data-youtube-src=\"#{self.class.escape(url)}\"><img src=\"https://i.ytimg.com/vi/#{id}/hqdefault.jpg\" alt=\"#{alt}\"><button type=\"button\" class=\"youtube-play\" aria-label=\"#{alt.empty? ? 'YouTube動画を再生' : alt + 'を再生'}\">▶</button></span>"
           elsif self.class.safe_url?(node.attr["src"], image: true)
-            "<img src=\"#{self.class.escape(node.attr['src'])}\" alt=\"#{self.class.escape(node.attr['alt'])}\">"
+            alt = node.attr["alt"].to_s
+            split = alt.match(/\Abg\s+(left|right)(?:\s+(.*))?\z/m)
+            position = split ? " class=\"wani-image-#{split[1]}\"" : ""
+            alt = split[2].to_s if split
+            "<img#{position} src=\"#{self.class.escape(node.attr['src'])}\" alt=\"#{self.class.escape(alt)}\">"
           else
             @diagnostic.call("Unsafe image URL removed")
             self.class.escape(node.attr["alt"])

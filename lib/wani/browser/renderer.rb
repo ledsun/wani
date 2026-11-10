@@ -22,6 +22,7 @@ module Wani
         body = child(section, "div", "body")
         body[:innerHTML] = notes ? slide.notes_html : slide.html
         resolve_links(body)
+        prepare_image_columns(body) unless notes
         body.querySelectorAll("p").to_a.each do |paragraph|
           children = paragraph[:children].to_a
           next unless children.length == 1 && children.first[:classList].contains("youtube-video") == JS::True
@@ -108,6 +109,22 @@ module Wani
       end
 
       private
+
+      def prepare_image_columns(body)
+        image = body[:children].to_a.find do |element|
+          element[:tagName].to_s == "P" && element[:children][:length].to_i == 1 &&
+            element.querySelector("img.wani-image-left, img.wani-image-right") != JS::Null && element[:textContent].to_s.strip.empty?
+        end
+        return unless image
+        side = image.querySelector("img")[:className].to_s.end_with?("left") ? "left" : "right"
+        text = @document.createElement("div")
+        text[:className] = "image-column-text"
+        body[:childNodes].to_a.each { |node| text.appendChild(node) unless node == image }
+        image[:classList].add("image-column-image")
+        body[:classList].add("image-columns", "image-#{side}")
+        body.appendChild(side == "left" ? image : text)
+        body.appendChild(side == "left" ? text : image)
+      end
 
       def child(parent, tag, class_name)
         element = @document.createElement(tag)

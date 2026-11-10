@@ -193,12 +193,14 @@ module Wani
         mixed = !content[:textContent].to_s.strip.empty?
         videos_only = images.all? { |image| image.closest(".youtube-video") != JS::Null }
         fraction = mixed ? 0.45 : (videos_only ? 0.98 : 0.85)
-        budget = body[:clientHeight].to_f * fraction / images.length
+        columns = body[:classList].contains("image-columns") == JS::True
+        budget = body[:clientHeight].to_f * (columns ? 0.95 : fraction) / images.length
         images.each do |image|
           next if image[:naturalWidth].to_i.zero? || image[:naturalHeight].to_i.zero?
           width = image[:naturalWidth].to_f
           height = image.closest(".youtube-video") == JS::Null ? image[:naturalHeight].to_f : width * 9 / 16
-          ratio = [body[:clientWidth].to_f / width, budget / height].min
+          available_width = body[:clientWidth].to_f * (columns ? 0.47 : 1.0)
+          ratio = [available_width / width, budget / height].min
           image[:style][:width] = "#{width * ratio}px"
           image[:style][:height] = "#{height * ratio}px"
         end
