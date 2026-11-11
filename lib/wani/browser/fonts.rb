@@ -11,6 +11,7 @@ module Wani
       def apply(settings, sections)
         weights = [settings.fetch("title-weight", 700), settings.fetch("body-weight", 400)]
         weight_style = @document.createElement("style")
+        weight_style.setAttribute("data-wani-font", "")
         weight_style[:textContent] = ".slide .title { font-weight: #{weights[0]}; } .slide .body { font-weight: #{weights[1]}; }"
         @document[:head].appendChild(weight_style)
         name = settings["default"]
@@ -24,6 +25,7 @@ module Wani
           return
         end
         link = @document.createElement("link")
+        link.setAttribute("data-wani-font", "")
         link[:rel] = "stylesheet"
         link[:href] = "/talk/#{entry.fetch('stylesheet')}"
         loaded = JS.global[:Promise].new do |resolve, _reject|
@@ -49,6 +51,7 @@ module Wani
         end
         @document[:fonts][:ready].await
         style = @document.createElement("style")
+        style.setAttribute("data-wani-font", "")
         style[:textContent] = %(.slide .title, .slide .body { font-family: #{family}, "Zen Kaku Gothic New", sans-serif; })
         @document[:head].appendChild(style)
       rescue => error

@@ -14,25 +14,13 @@ module Wani
         @index = 0
         @warnings = []
         @layout = Layout.new(@document) { |message| warn(message) }
-        response = JS.global.fetch("/talk/slides.md").await
-        raise "Markdown を読み込めません (HTTP #{response[:status].to_i})" unless response[:ok] == JS::True
-        @presentation = Core::Parser.new.parse(response.text.await.to_s)
-        title = @presentation.slides.first.title
-        @document[:title] = title unless title.empty?
-        @presentation.diagnostics.each { |item| warn("#{item.slide ? "スライド #{item.slide}: " : ""}#{item.message}") }
-        @renderer = Renderer.new(@document, @presentation)
-        @sections = @presentation.slides.map { |slide| @renderer.slide(slide) }
-        @sections.each { |section| element("stage").appendChild(section) }
-        font_sections = @sections + @presentation.slides.map { |slide| @renderer.slide(slide, notes: true) }
-        Fonts.new(@document) { |message| warn(message) }.apply(@presentation.fonts, font_sections)
-        @layout.wait_assets(element("stage"))
-        @sections.each_with_index { |section, index| @layout.fit_slide(section, index + 1) }
-        prepare_pages(false)
+        @presentation = fetch_presentation
+        render_presentation
         prepare_timer_image
         bind_events
         @waiting_to_start = JS.global[:location][:hash].to_s.empty?
         go(hash_index)
-        %w[previous next fullscreen speaker print print-notes].each { |id| element(id)[:disabled] = false }
+        %w[previous next fullscreen speaker print print-notes reload-slides].each { |id| element(id)[:disabled] = false }
         update_buttons
         if @waiting_to_start
           element("start-overlay")[:hidden] = false
@@ -43,6 +31,49 @@ module Wani
       end
 
       private
+
+      def fetch_presentation
+        response = JS.global.fetch("/talk/slides.md", { cache: "no-store" }.to_js).await
+        raise "Markdown を読み込めません (HTTP #{response[:status].to_i})" unless response[:ok] == JS::True
+        Core::Parser.new.parse(response.text.await.to_s)
+      end
+
+      def render_presentation
+        @warnings = []
+        element("warnings")[:hidden] = true
+        element("warnings")[:textContent] = ""
+        @document.querySelectorAll('[data-wani-font]').to_a.each(&:remove)
+        title = @presentation.slides.first.title
+        @document[:title] = title.empty? ? "Wani — Markdown presentation" : title
+        @presentation.diagnostics.each { |item| warn("#{item.slide ? "スライド #{item.slide}: " : ""}#{item.message}") }
+        @renderer = Renderer.new(@document, @presentation)
+        @sections = @presentation.slides.map { |slide| @renderer.slide(slide) }
+        element("stage").replaceChildren
+        @sections.each { |section| element("stage").appendChild(section) }
+        font_sections = @sections + @presentation.slides.map { |slide| @renderer.slide(slide, notes: true) }
+        Fonts.new(@document) { |message| warn(message) }.apply(@presentation.fonts, font_sections)
+        @layout.wait_assets(element("stage"))
+        @sections.each_with_index { |section, index| @layout.fit_slide(section, index + 1) }
+        prepare_pages(false)
+      end
+
+      def reload_slides
+        element("reload-slides")[:disabled] = true
+        element("status")[:textContent] = "スライドを再読み込みしています…"
+        presentation = fetch_presentation
+        @presentation = presentation
+        render_presentation
+        prepare_timer_image if @waiting_to_start
+        @active_number = nil
+        # The start dialog remains open when the presentation has not started.
+        go(@index)
+        element("status")[:textContent] = "スライドを再読み込みしました"
+      rescue => error
+        warn("スライドを再読み込みできませんでした: #{error.message}")
+        element("status")[:textContent] = "スライドの再読み込みに失敗しました"
+      ensure
+        element("reload-slides")[:disabled] = false
+      end
 
       def element(id)
         @document.getElementById(id)
@@ -74,6 +105,7 @@ module Wani
         end
         element("previous").addEventListener("click") { go(@index - 1) }
         element("next").addEventListener("click") { go(@index + 1) }
+        element("reload-slides").addEventListener("click") { async { reload_slides } }
         element("fullscreen").addEventListener("click") { fullscreen }
         element("speaker").addEventListener("click") { speaker }
         element("print").addEventListener("click") { async { print_pages(false) } }

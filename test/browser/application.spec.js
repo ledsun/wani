@@ -5,6 +5,27 @@ async function ready(page, hash = '#slide=1') {
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
 }
 
+test('reloads Markdown in the same VM, keeps the page, and retains slides on failure', async ({ page }) => {
+  let markdown = '# First\n\n---\n\n# Second\n\n---\n\n# Third';
+  let fail = false;
+  let wasmRequests = 0;
+  page.on('request', request => { if (new URL(request.url()).pathname.endsWith('.wasm')) wasmRequests++; });
+  await page.route('**/talk/slides.md', route => fail ? route.fulfill({ status: 500 }) : route.fulfill({ body: markdown }));
+  await ready(page, '#slide=2');
+  markdown = '# Updated\n\n---\n\n# New second';
+  await page.locator('#reload-slides').click();
+  await expect(page.locator('#status')).toHaveText('スライドを再読み込みしました');
+  await expect(page.locator('.slide.active .title')).toHaveText('New second');
+  await expect(page.locator('#position')).toHaveText('2 / 2');
+  expect(wasmRequests).toBe(1);
+  fail = true;
+  await page.locator('#reload-slides').click();
+  await expect(page.locator('#status')).toHaveText('スライドの再読み込みに失敗しました');
+  await expect(page.locator('.slide.active .title')).toHaveText('New second');
+  await expect(page.locator('#reload-slides')).toBeEnabled();
+  expect(wasmRequests).toBe(1);
+});
+
 test('CLI server boots packaged Ruby and renders the presentation', async ({ page }) => {
   const errors = [];
   const requests = [];
