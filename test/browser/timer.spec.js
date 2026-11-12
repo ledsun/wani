@@ -1,5 +1,22 @@
 import { test, expect } from '@playwright/test';
 
+test('speaker notes show time elapsed since Start even on the final slide with no time limit', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\ntime_limit: 0\n---\n# First\n\n---\n\n# Last' }));
+  await page.goto('/');
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 100));
+  const popup = page.waitForEvent('popup');
+  await page.keyboard.press('n');
+  const speaker = await popup;
+  await expect(speaker.locator('#elapsed')).toHaveText('--:--:--');
+  await page.getByRole('button', { name: 'スタート', exact: true }).click();
+  await expect(speaker.locator('#elapsed')).toHaveText('00:00:00');
+  await page.keyboard.press('End');
+  await page.clock.fastForward(65_000);
+  await expect(speaker.locator('#elapsed')).toHaveText('00:01:05');
+});
+
 async function ready(page, limit) {
   if (limit !== undefined) {
     await page.route('**/talk/slides.md', route => route.fulfill({ body: `---\ntime_limit: ${limit}\n---\n# One\n\n---\n\n# Two` }));

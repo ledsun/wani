@@ -101,6 +101,10 @@ module Wani
           element("viewport")[:inert] = false
           element("start-presentation").blur
           go(0)
+          @started_at = JS.global[:Date].now.to_f
+          @elapsed_callback = -> { update_speaker_elapsed }
+          JS.global.setInterval(@elapsed_callback, 1000)
+          update_speaker_elapsed
           start_timer
         end
         element("previous").addEventListener("click") { go(@index - 1) }
@@ -212,7 +216,16 @@ module Wani
             @renderer.resolve_links(document.getElementById("notes"))
           end
           sync_speaker
+          update_speaker_elapsed
         end
+      end
+
+      def update_speaker_elapsed
+        return unless @speaker && @speaker[:closed] == JS::False
+        output = @speaker[:document].getElementById("elapsed")
+        return if output == JS::Null
+        seconds = @started_at ? ((JS.global[:Date].now.to_f - @started_at) / 1000).floor : nil
+        output[:textContent] = seconds ? format("%02d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60) : "--:--:--"
       end
 
       def sync_speaker
