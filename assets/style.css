@@ -120,7 +120,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .speaker-rope { display: flex; justify-content: space-around; height: 42px; margin: 0 24px 20px; border-top: 6px ridge #c39a5c; border-radius: 45% 45% 0 0; }
 .speaker-rope span { width: 18px; height: 32px; background: #e5d6b8; clip-path: polygon(50% 0, 88% 24%, 64% 35%, 90% 53%, 63% 65%, 88% 78%, 48% 100%, 5% 83%, 31% 65%, 8% 53%, 34% 36%, 12% 25%); }
 .speaker-columns > * { height: max(280px, 60dvh); padding: 28px; border-radius: 8px; min-width: 0; overflow: auto; overflow-wrap: anywhere; }
-.speaker-columns article { background: #faf9f6; color: #182b2d; }
+.speaker-columns article { background: #faf9f6; color: #182b2d; overflow: hidden; }
+#speaker-slide-content { display: flow-root; }
 .speaker-columns aside { background: #ffffff08; border: 1px solid #b9aa8f66; }
 .speaker-columns aside h2 { margin-top: 0; color: #f3e9d5; }
 .speaker-columns aside a { color: #e5c78f; }

@@ -225,7 +225,7 @@ test('speaker window shows private notes and stays synchronized', async ({ page 
   await expect(page.locator('#position')).toHaveText('1 / 3');
 });
 
-test('speaker panels keep their height and scroll long content', async ({ page }) => {
+test('speaker panels keep their height, fit the slide, and scroll long notes', async ({ page }) => {
   await ready(page);
   const opened = page.waitForEvent('popup');
   await page.keyboard.press('n');
@@ -242,7 +242,9 @@ test('speaker panels keep their height and scroll long content', async ({ page }
     const after = await panels.evaluateAll(elements => elements.map(element => ({ height: element.getBoundingClientRect().height, clientHeight: element.clientHeight, scrollHeight: element.scrollHeight })));
     expect(before[0]).toBe(before[1]);
     expect(after.map(panel => panel.height)).toEqual(before);
-    expect(after.every(panel => panel.scrollHeight > panel.clientHeight)).toBe(true);
+    await expect.poll(() => speaker.locator('#speaker-slide-content').evaluate(node => Number(getComputedStyle(node).zoom))).toBeLessThan(1);
+    await expect.poll(() => panels.first().evaluate(node => node.scrollHeight <= node.clientHeight + 1 && node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+    expect(after[1].scrollHeight).toBeGreaterThan(after[1].clientHeight);
   }
   await speaker.close();
 });
