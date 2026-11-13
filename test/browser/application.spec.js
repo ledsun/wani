@@ -225,6 +225,28 @@ test('speaker window shows private notes and stays synchronized', async ({ page 
   await expect(page.locator('#position')).toHaveText('1 / 3');
 });
 
+test('speaker panels keep their height and scroll long content', async ({ page }) => {
+  await ready(page);
+  const opened = page.waitForEvent('popup');
+  await page.keyboard.press('n');
+  const speaker = await opened;
+  await expect(speaker.locator('#current')).toHaveText('Ruby in your browser');
+  for (const viewport of [{ width: 1200, height: 800 }, { width: 600, height: 800 }]) {
+    await speaker.setViewportSize(viewport);
+    const panels = speaker.locator('.speaker-columns > *');
+    const before = await panels.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height));
+    await speaker.evaluate(() => {
+      document.querySelector('#body').textContent = 'Long slide content '.repeat(1000);
+      document.querySelector('#notes').textContent = 'Long note content '.repeat(1000);
+    });
+    const after = await panels.evaluateAll(elements => elements.map(element => ({ height: element.getBoundingClientRect().height, clientHeight: element.clientHeight, scrollHeight: element.scrollHeight })));
+    expect(before[0]).toBe(before[1]);
+    expect(after.map(panel => panel.height)).toEqual(before);
+    expect(after.every(panel => panel.scrollHeight > panel.clientHeight)).toBe(true);
+  }
+  await speaker.close();
+});
+
 test('legacy decorations setting is ignored and invalid Markdown is rejected', async ({ page }) => {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\npage-footnote: Footnote\ndecorations: false\n---\n# Simple' }));
   await ready(page);
