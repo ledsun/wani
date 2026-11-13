@@ -210,9 +210,11 @@ module Wani
             document.getElementById("position")[:textContent] = state.fetch("position")
             document.getElementById("current")[:textContent] = state.fetch("title")
             document.getElementById("body")[:innerHTML] = state.fetch("html")
+            document.getElementById("body")[:className] = ""
             document.getElementById("notes")[:innerHTML] = state.fetch("notes_html")
             document.getElementById("page-footnote")[:textContent] = state.fetch("page_footnote")
             @renderer.resolve_links(document.getElementById("body"))
+            @renderer.prepare_image_columns(document.getElementById("body"))
             @renderer.resolve_links(document.getElementById("notes"))
           end
           sync_speaker

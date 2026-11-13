@@ -126,6 +126,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .speaker-columns aside a { color: #e5c78f; }
 .speaker-columns aside pre { overflow: auto; }
 .speaker-columns img { max-width: 100%; max-height: 35vh; object-fit: contain; }
+.speaker-columns #body.image-columns { display: flex; align-items: center; justify-content: space-between; gap: 6%; }
 .speaker-help { margin: 24px; color: #a5b9bb; font-size: 12px; }
 @media (max-width: 700px) { .brand span, .toolbar-divider { display: none; } .toolbar { padding: 8px; } .help { gap: 8px; } .speaker-heading, .speaker-columns { grid-template-columns: 1fr; } .speaker-heading { gap: 12px; } .speaker-columns > * { height: max(240px, 40dvh); } }
 @page { size: 320mm 180mm; margin: 0; }
