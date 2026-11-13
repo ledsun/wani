@@ -112,6 +112,10 @@ module Wani
         element("reload-slides").addEventListener("click") { async { reload_slides } }
         element("fullscreen").addEventListener("click") { fullscreen }
         element("speaker").addEventListener("click") { speaker }
+        JS.global.addEventListener("message") do |event|
+          next unless @speaker && event[:origin].to_s == JS.global[:location][:origin].to_s && event[:source] == @speaker && event[:data].to_s == "wani-speaker-ready"
+          connect_speaker
+        end
         element("print").addEventListener("click") { async { print_pages(false) } }
         element("print-notes").addEventListener("click") { async { print_pages(true) } }
         @document.addEventListener("keydown") do |event|
@@ -202,24 +206,25 @@ module Wani
           warn("ノート画面を開けません。ポップアップを許可して再試行してください。")
           return
         end
-        @speaker.addEventListener("load") do |_event|
-          @speaker.addEventListener("message") do |event|
-            next unless event[:origin].to_s == JS.global[:location][:origin].to_s && event[:source] == JS.global
-            state = JSON.parse(event[:data].to_s)
-            document = @speaker[:document]
-            document.getElementById("position")[:textContent] = state.fetch("position")
-            document.getElementById("current")[:textContent] = state.fetch("title")
-            document.getElementById("body")[:innerHTML] = state.fetch("html")
-            document.getElementById("body")[:className] = ""
-            document.getElementById("notes")[:innerHTML] = state.fetch("notes_html")
-            document.getElementById("page-footnote")[:textContent] = state.fetch("page_footnote")
-            @renderer.resolve_links(document.getElementById("body"))
-            @renderer.prepare_image_columns(document.getElementById("body"))
-            @renderer.resolve_links(document.getElementById("notes"))
-          end
-          sync_speaker
-          update_speaker_elapsed
+      end
+
+      def connect_speaker
+        @speaker.addEventListener("message") do |event|
+          next unless event[:origin].to_s == JS.global[:location][:origin].to_s && event[:source] == JS.global
+          state = JSON.parse(event[:data].to_s)
+          document = @speaker[:document]
+          document.getElementById("position")[:textContent] = state.fetch("position")
+          document.getElementById("current")[:textContent] = state.fetch("title")
+          document.getElementById("body")[:innerHTML] = state.fetch("html")
+          document.getElementById("body")[:className] = ""
+          document.getElementById("notes")[:innerHTML] = state.fetch("notes_html")
+          document.getElementById("page-footnote")[:textContent] = state.fetch("page_footnote")
+          @renderer.resolve_links(document.getElementById("body"))
+          @renderer.prepare_image_columns(document.getElementById("body"))
+          @renderer.resolve_links(document.getElementById("notes"))
         end
+        sync_speaker
+        update_speaker_elapsed
       end
 
       def update_speaker_elapsed

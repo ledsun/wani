@@ -225,6 +225,22 @@ test('speaker window shows private notes and stays synchronized', async ({ page 
   await expect(page.locator('#position')).toHaveText('1 / 3');
 });
 
+test('reconnects the existing speaker window after reloading the presentation', async ({ page }) => {
+  await ready(page);
+  const opened = page.waitForEvent('popup');
+  await page.keyboard.press('n');
+  const speaker = await opened;
+  await expect(speaker.locator('#current')).toHaveText('Ruby in your browser');
+  await page.reload();
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  await page.keyboard.press('n');
+  await expect(speaker.locator('#current')).toHaveText('Ruby in your browser');
+  await page.keyboard.press('ArrowRight');
+  await expect(speaker.locator('#position')).toHaveText('2 / 3');
+  await expect(speaker.locator('#notes')).toHaveText('Second slide notes.');
+  await speaker.close();
+});
+
 test('speaker panels keep their height, fit the slide, and scroll long notes', async ({ page }) => {
   await ready(page);
   const opened = page.waitForEvent('popup');

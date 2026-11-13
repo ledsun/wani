@@ -20,3 +20,4 @@ new ResizeObserver(fitSlide).observe(panel);
 new MutationObserver(fitSlide).observe(content, { childList: true, characterData: true, subtree: true });
 content.addEventListener('load', fitSlide, true);
 document.fonts.ready.then(fitSlide);
+if (window.opener) window.opener.postMessage('wani-speaker-ready', location.origin);
