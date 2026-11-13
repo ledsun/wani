@@ -44,7 +44,7 @@ module Wani
         element("warnings")[:textContent] = ""
         @document.querySelectorAll('[data-wani-font]').to_a.each(&:remove)
         title = @presentation.slides.first.title
-        @document[:title] = title.empty? ? "Wani — Markdown presentation" : title
+        @document[:title] = title.empty? ? "WANI — Markdown presentation" : title
         @presentation.diagnostics.each { |item| warn("#{item.slide ? "スライド #{item.slide}: " : ""}#{item.message}") }
         @renderer = Renderer.new(@document, @presentation)
         @sections = @presentation.slides.map { |slide| @renderer.slide(slide) }
