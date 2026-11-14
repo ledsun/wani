@@ -20,7 +20,7 @@ module Wani
         bind_events
         @waiting_to_start = JS.global[:location][:hash].to_s.empty?
         go(hash_index)
-        %w[previous next fullscreen speaker print print-notes reload-slides].each { |id| element(id)[:disabled] = false }
+        %w[previous next fullscreen speaker print print-notes reload-slides pointer-character-toggle].each { |id| element(id)[:disabled] = false }
         update_buttons
         if @waiting_to_start
           element("start-overlay")[:hidden] = false
@@ -112,6 +112,7 @@ module Wani
         element("reload-slides").addEventListener("click") { async { reload_slides } }
         element("fullscreen").addEventListener("click") { fullscreen }
         element("speaker").addEventListener("click") { speaker }
+        bind_pointer_character
         JS.global.addEventListener("message") do |event|
           next unless @speaker && event[:origin].to_s == JS.global[:location][:origin].to_s && event[:source] == @speaker && event[:data].to_s == "wani-speaker-ready"
           connect_speaker
@@ -122,7 +123,7 @@ module Wani
           target = event[:target]
           next if event[:ctrlKey] == JS::True || event[:altKey] == JS::True || event[:metaKey] == JS::True
           next if %w[INPUT TEXTAREA SELECT].include?(target[:tagName].to_s) || target[:isContentEditable] == JS::True
-          next if @waiting_to_start && !%w[f F Escape n N].include?(event[:key].to_s)
+          next if @waiting_to_start && !%w[f F Escape n N c C].include?(event[:key].to_s)
           if event[:key].to_s == "Escape"
             close = @sections[@index].querySelector(".youtube-close")
             unless close == JS::Null
@@ -140,6 +141,7 @@ module Wani
           when "f", "F" then fullscreen
           when "Escape" then exit_fullscreen
           when "n", "N" then speaker
+          when "c", "C" then toggle_pointer_character unless event[:repeat] == JS::True
           else handled = false
           end
           event.preventDefault if handled
@@ -147,6 +149,46 @@ module Wani
         JS.global.addEventListener("resize") { @layout.scale }
         JS.global.addEventListener("hashchange") { go(hash_index) }
         @document.addEventListener("fullscreenchange") { @layout.scale }
+      end
+
+      def bind_pointer_character
+        @pointer_enabled = false
+        @pointer_seen = false
+        @pointer_direction = 1
+        element("pointer-character-toggle").addEventListener("click") { toggle_pointer_character }
+        @document.addEventListener("mousemove") do |event|
+          next unless @pointer_enabled
+          @pointer_target_x, @pointer_target_y = event[:clientX].to_f, event[:clientY].to_f
+          unless @pointer_seen
+            @pointer_x, @pointer_y = @pointer_target_x, @pointer_target_y
+            @pointer_seen = true
+            element("pointer-character")[:hidden] = false
+            @pointer_animation.call
+          end
+        end
+        @document.addEventListener("mouseleave") do
+          @pointer_seen = false
+          element("pointer-character")[:hidden] = true
+          JS.global.cancelAnimationFrame(@pointer_frame) if @pointer_frame
+        end
+        @pointer_animation = ->(_time = nil) do
+          if @pointer_enabled && @pointer_seen
+            distance_x = @pointer_target_x - @pointer_x
+            @pointer_direction = distance_x.positive? ? 1 : -1 if distance_x.abs > 1
+            @pointer_x += (@pointer_target_x - @pointer_x) * 0.08
+            @pointer_y += (@pointer_target_y - @pointer_y) * 0.08
+            element("pointer-character")[:style][:transform] = "translate(#{@pointer_x - 40}px, #{@pointer_y - 19}px) scaleX(#{@pointer_direction})"
+            @pointer_frame = JS.global.requestAnimationFrame(@pointer_animation)
+          end
+        end
+      end
+
+      def toggle_pointer_character
+        @pointer_enabled = !@pointer_enabled
+        @pointer_seen = false
+        JS.global.cancelAnimationFrame(@pointer_frame) if @pointer_frame
+        element("pointer-character")[:hidden] = true
+        element("pointer-character-toggle").setAttribute("aria-pressed", @pointer_enabled.to_s)
       end
 
       def hash_index

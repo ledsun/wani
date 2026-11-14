@@ -5,6 +5,28 @@ async function ready(page, hash = '#slide=1') {
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
 }
 
+test('pointer rabbit can be toggled and follows the mouse', async ({ page }) => {
+  await ready(page);
+  const rabbit = page.locator('#pointer-character');
+  const toggle = page.locator('#pointer-character-toggle');
+  await expect(rabbit).toBeHidden();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await page.mouse.move(300, 300);
+  await expect(rabbit).toBeVisible();
+  await page.mouse.move(600, 400);
+  await expect.poll(async () => (await rabbit.boundingBox()).x).toBeGreaterThan(300);
+  await expect(rabbit).toHaveCSS('transform', /matrix\(1, 0, 0, 1,/);
+  await page.mouse.move(100, 400);
+  await expect(rabbit).toHaveCSS('transform', /matrix\(-1, 0, 0, 1,/);
+  await page.keyboard.press('c');
+  await expect(rabbit).toBeHidden();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await page.keyboard.press('C');
+  await page.mouse.move(400, 300);
+  await expect(rabbit).toBeVisible();
+});
+
 test('reloads Markdown in the same VM, keeps the page, and retains slides on failure', async ({ page }) => {
   let markdown = '# First\n\n---\n\n# Second\n\n---\n\n# Third';
   let fail = false;

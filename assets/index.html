@@ -18,6 +18,7 @@
     <button id="reload-slides" title="スライドを再読み込み" disabled>再読み込み</button>
     <button id="fullscreen" title="全画面 (F)" disabled>全画面 (F)</button>
     <button id="speaker" title="発表者ノート (N)" disabled>ノート (N)</button>
+    <button id="pointer-character-toggle" title="追いかけウサギ (C)" aria-pressed="false" disabled>ウサギ (C)</button>
     <button id="print" disabled>PDF</button>
     <button id="print-notes" disabled>ノート付き PDF</button>
   </nav>
@@ -37,6 +38,7 @@
 </section>
 <footer class="help">← → ページ移動 <span>Home / End 最初・最後</span></footer>
 <article id="print-pages" aria-hidden="true"></article>
+<img id="pointer-character" src="/assets/rabbit.svg" alt="" aria-hidden="true" hidden>
 <script src="/assets/runtime.pr672.js" data-ruby-wasm-url="/assets/wani.wasm"></script>
 <script type="text/ruby" data-eval="async" src="/assets/bootstrap.rb"></script>
 </body>
