@@ -3,6 +3,7 @@ require "open3"
 require "net/http"
 require "timeout"
 require "rbconfig"
+require "zlib"
 
 class HTTPTest < Minitest::Test
   def test_real_cli_serves_selected_file_and_rejects_escape_then_shuts_down
@@ -25,7 +26,26 @@ class HTTPTest < Minitest::Test
     assert_equal source, response.body
     assert_includes http.get("/").body, "data-ruby-wasm-url"
     assert_equal "text/plain; charset=utf-8", response["Content-Type"]
-    assert_equal "application/wasm", http.head("/assets/wani.wasm")["Content-Type"]
+    wasm_path = "/assets/wani.wasm"
+    wasm = File.binread(File.join(root, wasm_path.delete_prefix("/")))
+    gzip = http.get(wasm_path, "Accept-Encoding" => "br, gzip;q=0.5")
+    assert_equal "200", gzip.code
+    assert_equal "application/wasm", gzip["Content-Type"]
+    assert_equal "Accept-Encoding", gzip["Vary"]
+    assert_equal "gzip", gzip["Content-Encoding"]
+    assert_operator gzip.body.bytesize, :<, wasm.bytesize
+    assert_equal wasm, Zlib.gunzip(gzip.body)
+
+    head = http.head(wasm_path, "Accept-Encoding" => "*")
+    assert_equal "gzip", head["Content-Encoding"]
+    assert_equal gzip["Content-Length"], head["Content-Length"]
+    assert_nil head.body
+
+    identity = http.get(wasm_path, "Accept-Encoding" => "gzip;q=0, *;q=1")
+    assert_equal "Accept-Encoding", identity["Vary"]
+    assert_nil identity["Content-Encoding"]
+    assert_equal wasm, identity.body
+    assert_nil http.get("/talk/slides.md", "Accept-Encoding" => "gzip")["Content-Encoding"]
     %w[UDEVGothic ZenKakuGothicNew].product(%w[Regular Bold]).each do |family, weight|
       extension = "ttf"
       font = http.get("/assets/fonts/#{family}-#{weight}.#{extension}")

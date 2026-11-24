@@ -1,4 +1,5 @@
 require "webrick"
+require "zlib"
 require_relative "application"
 
 module Wani
@@ -12,6 +13,13 @@ module Wani
         @server.mount_proc("/") do |request, response|
           if %w[GET HEAD].include?(request.request_method)
             status, headers, body = app.call(request.unparsed_uri)
+            if status == 200 && headers["Content-Type"] == "application/wasm"
+              headers["Vary"] = "Accept-Encoding"
+              if accepts_gzip?(request["Accept-Encoding"])
+                headers["Content-Encoding"] = "gzip"
+                body = Zlib.gzip(body, level: Zlib::BEST_SPEED)
+              end
+            end
             response.status = status
             headers.each { |key, value| response[key] = value }
             response.body = body
@@ -28,6 +36,23 @@ module Wani
       ensure
         previous&.each { |signal, handler| Signal.trap(signal, handler) }
         @server.shutdown
+      end
+
+      private
+
+      def accepts_gzip?(header)
+        qualities = {}
+        header.to_s.split(",").each do |entry|
+          coding, weight = entry.downcase.split(";", 2).map(&:strip)
+          next unless %w[gzip *].include?(coding)
+
+          qualities[coding] = if weight
+                                weight[/\Aq=(0(?:\.\d{0,3})?|1(?:\.0{0,3})?)\z/, 1].to_f
+                              else
+                                1
+                              end
+        end
+        qualities.fetch("gzip") { qualities.fetch("*", 0) }.positive?
       end
     end
   end
