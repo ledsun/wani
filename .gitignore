@@ -4,6 +4,7 @@ node_modules/
 pkg/
 *.gem
 assets/wani.wasm
+assets/wani.wasm.gz
 assets/runtime.pr672.js
 assets/build.json
 test-results/

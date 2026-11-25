@@ -1,5 +1,4 @@
 require "webrick"
-require "zlib"
 require_relative "application"
 
 module Wani
@@ -12,14 +11,7 @@ module Wani
           StartCallback: -> { out.puts "Wani: http://#{bind.include?(':') ? "[#{bind}]" : bind}:#{@server.listeners.first.addr[1]}/"; out.flush })
         @server.mount_proc("/") do |request, response|
           if %w[GET HEAD].include?(request.request_method)
-            status, headers, body = app.call(request.unparsed_uri)
-            if status == 200 && headers["Content-Type"] == "application/wasm"
-              headers["Vary"] = "Accept-Encoding"
-              if accepts_gzip?(request["Accept-Encoding"])
-                headers["Content-Encoding"] = "gzip"
-                body = Zlib.gzip(body, level: Zlib::BEST_SPEED)
-              end
-            end
+            status, headers, body = app.call(request.unparsed_uri, accept_gzip: accepts_gzip?(request["Accept-Encoding"]))
             response.status = status
             headers.each { |key, value| response[key] = value }
             response.body = body

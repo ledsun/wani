@@ -67,7 +67,8 @@ bundle exec ruby scripts/smoke_package.rb
 既存 Chrome を使う場合は `CHROMIUM_PATH=/usr/bin/google-chrome npm test`。
 自動テストは手動確認用サーバーとの競合を避け、既定で18000番を使います（`WANI_TEST_PORT` で変更可能）。
 Rubyソースを変更した場合は必ず wasm を再ビルドしてください。テストがソースと生成物のハッシュを照合します。
-ソース管理では生成 wasm を除外していますが、`gem build` の成果物には含めます。
+ビルドは開発用の `assets/wani.wasm` と、配信用の `assets/wani.wasm.gz` を生成します。
+gem には gzip 版だけを収録します。`/assets/wani.wasm` は gzip 対応クライアントに圧縮済みのデータを返し、それ以外には展開して返します。
 `bundle exec rake package` は再ビルド・Rubyテスト・gem作成をまとめて実行します。
 
 RubyテストはCLI・共通ロジック・ファイル配信・パストラバーサル・シンボリックリンク・終了処理を検証します。

@@ -1,5 +1,6 @@
 require "uri"
 require "json"
+require "zlib"
 require_relative "../fonts/manager"
 require_relative "../../wani"
 
@@ -22,8 +23,10 @@ module Wani
         report_font(File.read(@file, encoding: "UTF-8")) if @diagnostics
       end
 
-      def call(raw_path)
+      def call(raw_path, accept_gzip: false)
         path = decode(raw_path)
+        wasm = path == "/assets/wani.wasm"
+        precompressed = wasm && File.file?(File.join(@assets, "wani.wasm.gz"))
         if path == "/talk/fonts.json"
           return [200, { "Content-Type" => "application/json", "Cache-Control" => "no-store" }, JSON.generate(Fonts::Manager.new(@root).list)]
         end
@@ -31,6 +34,8 @@ module Wani
                  File.join(@assets, "index.html")
                elsif path == "/talk/slides.md"
                  @file
+               elsif precompressed
+                 contained(@assets, "wani.wasm.gz")
                elsif path.start_with?("/assets/") && ASSETS.include?(path.delete_prefix("/assets/"))
                  contained(@assets, path.delete_prefix("/assets/"))
                elsif path.start_with?("/talk/fonts/") && Fonts::Manager.new(@root).list.values.any? { |entry| entry.fetch("files").include?(path.delete_prefix("/talk/")) }
@@ -41,7 +46,7 @@ module Wani
                  return [404, {}, "Not found"]
                end
         return [404, {}, "Not found"] unless File.file?(file)
-        type = TYPES.fetch(File.extname(file).downcase, "text/plain; charset=utf-8")
+        type = wasm ? "application/wasm" : TYPES.fetch(File.extname(file).downcase, "text/plain; charset=utf-8")
         headers = { "Content-Type" => type, "X-Content-Type-Options" => "nosniff", "Cache-Control" => "no-store" }
         if type.start_with?("image/")
           headers["Content-Security-Policy"] = "sandbox; default-src 'none'; style-src 'unsafe-inline'"
@@ -49,6 +54,15 @@ module Wani
           headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: http:; connect-src 'self'; frame-src https://www.youtube.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
         end
         body = File.binread(file)
+        if wasm
+          headers["Vary"] = "Accept-Encoding"
+          if accept_gzip
+            headers["Content-Encoding"] = "gzip"
+            body = Zlib.gzip(body, level: Zlib::BEST_SPEED) unless precompressed
+          elsif precompressed
+            body = Zlib.gunzip(body)
+          end
+        end
         report_font(body.dup.force_encoding(Encoding::UTF_8)) if path == "/talk/slides.md" && @diagnostics
         [200, headers, body]
       rescue ArgumentError, EncodingError
