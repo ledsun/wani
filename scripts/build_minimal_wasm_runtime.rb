@@ -15,8 +15,9 @@ def build_minimal_wasm_runtime(probe, stage)
   cli = RubyWasm::CLI.new(stdout: $stdout, stderr: $stderr)
   config = cli.send(:build_config, ruby_version: "4.0", target_triplet: "wasm32-unknown-wasip1", profile: "minimal", patches: [])
   config[:default_exts] = extensions
-  # rbwasm's build directory name does not otherwise include the extension list.
-  config[:suffix] += "-#{Digest::SHA256.hexdigest(extensions)[0, 16]}"
+  encoding_options = "--encs=utf_16* --transes=utf_16_32"
+  # rbwasm's build directory name omits the extension list and encoding options.
+  config[:suffix] += "-#{Digest::SHA256.hexdigest([extensions, encoding_options].join("\n"))[0, 16]}"
   workspace = File.expand_path("vendor/wani-wasm/#{RubyWasm::VERSION}")
   FileUtils.mkdir_p(workspace)
 
@@ -37,6 +38,11 @@ def build_minimal_wasm_runtime(probe, stage)
     packager = RubyWasm::Packager.new(workspace, config)
     packager.define_singleton_method(:specs) { [js] }
     executor = RubyWasm::BuildExecutor.new
+    # CRuby's makefiles forward ENCS to the static encoding generator.
+    executor.define_singleton_method(:system) do |*args, chdir: nil, env: nil|
+      env = (env || {}).merge("ENCS" => encoding_options) if args.first == "make"
+      super(*args, chdir: chdir, env: env)
+    end
     tarball = packager.ruby_core_build.build(executor, {})
     runtime_file = File.join(File.basename(tarball, ".tar.gz"), "usr/local/bin/ruby")
     executor.system("tar", "-xzf", tarball, "-C", stage, runtime_file)

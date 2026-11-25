@@ -47,9 +47,10 @@ npm test
 ```
 
 現在のソースで検出用 WASM を作って拡張を調べ、Ruby 4.0 の WASI Preview 1 ビルドに反映します。
+文字コードは Ruby の組み込みの UTF-8・US-ASCII・ASCII-8BIT に加え、Psych が使う UTF-16LE／BE とその変換を組み込みます。
 ブラウザー接続に使う `js` gem も静的に組み込みます。初回はホスト用 C コンパイラー、
 `make`、`curl`、ネット接続が必要で、依存の取得と Ruby のコンパイルに時間がかかります。
-ビルド済みのランタイムは `vendor/wani-wasm/` に拡張リストごとにキャッシュします。
+ビルド済みのランタイムは `vendor/wani-wasm/` に拡張リストと文字コード構成ごとにキャッシュします。
 通常版を生成するには `bundle exec rake build:wasm` を実行してください。
 
 ## テストとパッケージ

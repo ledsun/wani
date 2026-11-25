@@ -27,3 +27,15 @@ test('CRuby and browser wasm share the parser with identical models and errors',
     expect(JSON.parse(wasm)).toEqual(JSON.parse(native.stdout));
   }
 });
+
+test('browser Ruby can read Japanese YAML encoded as UTF-16', async ({ page }) => {
+  await page.goto('/#slide=1');
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  const result = await page.evaluate(() => window.rubyVM.eval(String.raw`
+    source = "title: 日本語\n"
+    %w[UTF-16LE UTF-16BE].map do |encoding|
+      YAML.safe_load(source.encode(encoding)).fetch("title")
+    end.to_json
+  `).toString());
+  expect(JSON.parse(result)).toEqual(['日本語', '日本語']);
+});
