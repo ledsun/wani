@@ -116,6 +116,18 @@ test('body fits, window resize scales and titleless PNG JPEG WebP images load', 
   await expect(page.locator('#warnings')).toBeHidden();
 });
 
+test('enlarges a short body beyond 160px while keeping it inside the slide', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({
+    body: '# 表紙\n\n---\n\n# ruby+stdlib.wasmのファイルサイズ\n\n31.05MiB\n',
+  }));
+  await ready(page, '#slide=2');
+  const body = page.locator('.slide.active .body');
+  await expect(body).toHaveCSS('font-size', '320px');
+  expect(await body.evaluate(node =>
+    node.scrollWidth <= node.clientWidth && node.scrollHeight <= node.clientHeight
+  )).toBe(true);
+});
+
 test('adds a modest title gap when a slide has spare space below its body', async ({ page }) => {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: '# Cover\n\n---\n\n# 人間とLLMの認知様式のちがい\n\n人間：抽象化・構造化  \nLLM：特徴ベクトルの次元数\n\n---\n\n# Dense\n\n' + Array(14).fill('A line of text').join('  \n') }));
   await ready(page, '#slide=2');

@@ -4,7 +4,7 @@ module Wani
       WIDTH = 1920
       HEIGHT = 1080
       BODY_MIN = 16
-      BODY_MAX = 160
+      BODY_MAX = 320
       COVER_BODY_SIZE = 48
       TITLE_MIN = 24
       TITLE_MAX = 220
