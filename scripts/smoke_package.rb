@@ -40,7 +40,7 @@ Dir.mktmpdir("wani-installed-") do |directory|
       abort "Installed #{timer_image} differs from source" unless Digest::SHA256.file(File.join(installed_root, timer_image)).hexdigest == Digest::SHA256.file(File.join(root, timer_image)).hexdigest
     end
     %w[ZenKakuGothicNew UDEVGothic].product(%w[Regular Bold]).each do |family, weight|
-      extension = "ttf"
+      extension = "woff2"
       relative = "assets/fonts/#{family}-#{weight}.#{extension}"
       abort "Installed #{weight} font differs from source" unless Digest::SHA256.file(File.join(installed_root, relative)).hexdigest == Digest::SHA256.file(File.join(root, relative)).hexdigest
     end
@@ -64,8 +64,8 @@ Dir.mktmpdir("wani-installed-") do |directory|
       identity = http.get(wasm_path, "Accept-Encoding" => "identity")
       abort "Installed identity wasm unavailable" unless identity.code == "200" &&
         identity["Content-Encoding"].nil? && identity.body == wasm
-      abort "Installed font unavailable" unless http.head("/assets/fonts/ZenKakuGothicNew-Regular.ttf")["Content-Type"] == "font/ttf"
-      abort "Installed UDEV Gothic font unavailable" unless http.head("/assets/fonts/UDEVGothic-Regular.ttf")["Content-Type"] == "font/ttf"
+      abort "Installed font unavailable" unless http.head("/assets/fonts/ZenKakuGothicNew-Regular.woff2")["Content-Type"] == "font/woff2"
+      abort "Installed UDEV Gothic font unavailable" unless http.head("/assets/fonts/UDEVGothic-Regular.woff2")["Content-Type"] == "font/woff2"
       Process.kill("INT", wait.pid)
       abort "Installed server failed to stop" unless Timeout.timeout(10) { wait.value }.success?
       puts "Installed gem: new / check / serve / browser assets / SIGINT all passed"

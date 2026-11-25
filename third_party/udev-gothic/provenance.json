@@ -8,12 +8,19 @@
     "UDEVGothic-Regular.ttf": {
       "source_path": "UDEVGothic_v2.2.0/UDEVGothic-Regular.ttf",
       "bytes": 3874344,
-      "sha256": "25fa0eca4be611ac125f03411d280c85494153da01dfa02ba734399c05f6289d"
+      "sha256": "25fa0eca4be611ac125f03411d280c85494153da01dfa02ba734399c05f6289d",
+      "bundled_path": "assets/fonts/UDEVGothic-Regular.woff2",
+      "bundled_bytes": 2068020,
+      "bundled_sha256": "0b9fb7dfa218628b77b9b03ff7535e1d1ba094f80bfff4a6ffa40c082333e3a1"
     },
     "UDEVGothic-Bold.ttf": {
       "source_path": "UDEVGothic_v2.2.0/UDEVGothic-Bold.ttf",
       "bytes": 3865816,
-      "sha256": "1a1a7188a6b10195994cde6a30cca1cc7cbbc8badf0420bd29216035baa3d541"
+      "sha256": "1a1a7188a6b10195994cde6a30cca1cc7cbbc8badf0420bd29216035baa3d541",
+      "bundled_path": "assets/fonts/UDEVGothic-Bold.woff2",
+      "bundled_bytes": 2111196,
+      "bundled_sha256": "b50ce514f0e4bce709112681b322e0e7e3d4c751fdac3cfbf899ecd2fcb6b26d"
     }
-  }
+  },
+  "conversion": "fonttools 4.46.0 ttLib.woff2 compress --no-glyf-transform"
 }

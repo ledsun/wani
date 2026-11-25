@@ -19,7 +19,7 @@ async function setup(page, { missing = false, broken = false, markdown = source 
       if (broken) return route.abort();
       await new Promise(resolve => setTimeout(resolve, 400));
       const bold = route.request().url().includes('700.woff2');
-      await route.fulfill({ contentType: 'font/woff2', body: fs.readFileSync(`assets/fonts/UDEVGothic-${bold ? 'Bold' : 'Regular'}.ttf`) });
+      await route.fulfill({ contentType: 'font/woff2', body: fs.readFileSync(`assets/fonts/UDEVGothic-${bold ? 'Bold' : 'Regular'}.woff2`) });
     });
   }
   // Internet is unavailable; the local presentation server remains available.

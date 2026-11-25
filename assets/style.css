@@ -1,27 +1,27 @@
 @font-face {
   font-family: "UDEV Gothic";
-  src: url("/assets/fonts/UDEVGothic-Regular.ttf") format("truetype");
+  src: url("/assets/fonts/UDEVGothic-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: block;
 }
 @font-face {
   font-family: "UDEV Gothic";
-  src: url("/assets/fonts/UDEVGothic-Bold.ttf") format("truetype");
+  src: url("/assets/fonts/UDEVGothic-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: block;
 }
 @font-face {
   font-family: "Zen Kaku Gothic New";
-  src: url("/assets/fonts/ZenKakuGothicNew-Regular.ttf") format("truetype");
+  src: url("/assets/fonts/ZenKakuGothicNew-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: block;
 }
 @font-face {
   font-family: "Zen Kaku Gothic New";
-  src: url("/assets/fonts/ZenKakuGothicNew-Bold.ttf") format("truetype");
+  src: url("/assets/fonts/ZenKakuGothicNew-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: block;

@@ -26,7 +26,7 @@ test('bundled Regular and Bold render Japanese before layout and embed in PDF', 
   const requests = [];
   page.on('request', request => requests.push(new URL(request.url())));
   // Delay Bold: a hidden title must not be fitted using its fallback font.
-  await page.route('**/ZenKakuGothicNew-Bold.ttf', async route => {
+  await page.route('**/ZenKakuGothicNew-Bold.woff2', async route => {
     await new Promise(resolve => setTimeout(resolve, 250));
     await route.continue();
   });
@@ -44,8 +44,8 @@ test('bundled Regular and Bold render Japanese before layout and embed in PDF', 
   await expect(page.locator('#warnings')).toBeHidden();
   expect(requests.every(url => url.origin === new URL(page.url()).origin)).toBe(true);
   expect(requests.filter(url => /\.(woff2|ttf)$/.test(url.pathname)).map(url => url.pathname).sort()).toEqual([
-    '/assets/fonts/UDEVGothic-Bold.ttf', '/assets/fonts/UDEVGothic-Regular.ttf',
-    '/assets/fonts/ZenKakuGothicNew-Bold.ttf', '/assets/fonts/ZenKakuGothicNew-Regular.ttf',
+    '/assets/fonts/UDEVGothic-Bold.woff2', '/assets/fonts/UDEVGothic-Regular.woff2',
+    '/assets/fonts/ZenKakuGothicNew-Bold.woff2', '/assets/fonts/ZenKakuGothicNew-Regular.woff2',
   ]);
   const pdfBuffer = await page.pdf({ preferCSSPageSize: true, printBackground: true, path: info.outputPath('japanese.pdf') });
   const task = getDocument({ data: new Uint8Array(pdfBuffer), useSystemFonts: false });
@@ -82,7 +82,7 @@ test('speaker window uses the same bundled Japanese font', async ({ page }) => {
 });
 
 test('font failure warns and retains a usable fallback presentation', async ({ page }) => {
-  await page.route('**/ZenKakuGothicNew-*.ttf', route => route.abort());
+  await page.route('**/ZenKakuGothicNew-*.woff2', route => route.abort());
   await ready(page);
   await expect(page.locator('#warnings')).toContainText('フォントを読み込めませんでした');
   await expect(page.locator('.slide.active .title')).toHaveText('日本語プレゼンテーション');
@@ -94,7 +94,7 @@ test('hidden code loads UDEV before fitting and uses equal-width Japanese in PDF
     body: '# Intro\n\nText\n\n---\n\n# Code\n\nInline `value = 123` and **`bold = 456`**.\n\n```ruby\nputs "日本語コメント" # ABC 123\n```',
     contentType: 'text/plain; charset=utf-8',
   }));
-  await page.route('**/UDEVGothic-*.ttf', async route => {
+  await page.route('**/UDEVGothic-*.woff2', async route => {
     await new Promise(resolve => setTimeout(resolve, 300));
     await route.continue();
   });

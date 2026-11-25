@@ -209,6 +209,7 @@ Ctrl+P でも印刷できます。
 
 日本語・英数字の標準書体は **Zen Kaku Gothic New** です。
 コードは **UDEV Gothic** を使い、日本語も半角1:全角2の等幅で表示します。
+どちらも Regular と Bold を WOFF2 形式で同梱しています。
 
 フォントは SIL Open Font License 1.1 です。原文のライセンス・著作権表示と UDEV Gothic の配布元・チェックサムは
 [Zen Kaku Gothic New のライセンス](assets/fonts/ZenKakuGothicNew-OFL.txt) と

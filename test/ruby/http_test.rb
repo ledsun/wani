@@ -47,11 +47,11 @@ class HTTPTest < Minitest::Test
     assert_equal wasm, identity.body
     assert_nil http.get("/talk/slides.md", "Accept-Encoding" => "gzip")["Content-Encoding"]
     %w[UDEVGothic ZenKakuGothicNew].product(%w[Regular Bold]).each do |family, weight|
-      extension = "ttf"
+      extension = "woff2"
       font = http.get("/assets/fonts/#{family}-#{weight}.#{extension}")
       assert_equal "200", font.code
       assert_equal "font/#{extension}", font["Content-Type"]
-      assert_equal(extension == "ttf" ? "\x00\x01\x00\x00" : "wOF2", font.body.byteslice(0, 4))
+      assert_equal "wOF2", font.body.byteslice(0, 4)
     end
     assert_equal "404", http.get("/assets/fonts/unknown.woff2").code
     assert_equal "404", http.get("/talk/private.txt").code
