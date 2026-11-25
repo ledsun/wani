@@ -14,7 +14,7 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 40
     environment: release
     permissions:
       contents: read
@@ -44,8 +44,8 @@ jobs:
 
       - run: npm ci
 
-      - name: Build WASM, run Ruby tests, and package gem
-        run: bundle exec rake package
+      - name: Build minimal WASM, run Ruby tests, and package gem
+        run: bundle exec rake package:minimal
 
       - name: Browser tests
         run: |

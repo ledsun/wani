@@ -86,9 +86,10 @@ bundle exec rake release
 ```
 
 パッチバージョンを1つ上げ、`lib/wani/version.rb`・`Gemfile.lock`・README のインストール例を更新します。
-WASM の再ビルド、Ruby テスト、ブラウザーテスト、パッケージの動作確認が成功すると、
+`bundle exec rake package:minimal` で軽量版 WASM をビルドして gem に収録します。
+Ruby テスト、ブラウザーテスト、パッケージの動作確認が成功すると、
 バージョン更新をコミットして `vX.Y.Z` タグを作成し、`main` とタグを `origin` へ atomic push します。
-タグの push により、既存の GitHub Actions が再検証して RubyGems.org に公開します。
+タグの push により、GitHub Actions が同じタスクで軽量版の gem を作成し、再検証して RubyGems.org に公開します。
 コマンドの成功は push までを意味します。公開の成否は Actions の `Publish gem` で確認してください。
 
 テストに失敗した場合は、バージョン更新を元に戻し、コミット・タグ・push は行いません。

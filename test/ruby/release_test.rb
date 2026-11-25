@@ -26,7 +26,7 @@ class ReleaseTest < Minitest::Test
 
     def command(*args)
       @commands << args
-      @tested_version = File.read("lib/wani/version.rb") if args == %w[bundle exec rake package]
+      @tested_version = File.read("lib/wani/version.rb") if args == %w[bundle exec rake package:minimal]
       raise "Simulated failure" if args.include?(failure)
     end
   end
@@ -53,7 +53,7 @@ class ReleaseTest < Minitest::Test
     assert_equal "    wani (1.2.10)\n  wani (1.2.10)\n", File.read("Gemfile.lock")
     assert_equal "gem install ./wani-1.2.10.gem\n", File.read("README.md")
     assert_equal [
-      %w[bundle exec rake package],
+      %w[bundle exec rake package:minimal],
       %w[npm test],
       %w[bundle exec ruby scripts/smoke_package.rb],
       %w[git diff --check],
@@ -65,7 +65,7 @@ class ReleaseTest < Minitest::Test
   end
 
   def test_failed_checks_restore_files_and_never_commit
-    %w[package test scripts/smoke_package.rb --check].each do |failure|
+    %w[package:minimal test scripts/smoke_package.rb --check].each do |failure|
       originals = Wani::Release::FILES.to_h { |path| [path, File.binread(path)] }
       @release = FakeRelease.new
       @release.failure = failure

@@ -17,6 +17,12 @@ desc "Build the installable gem, including freshly packed browser assets"
 task package: ["build:wasm", :test] do
   sh "gem", "build", "wani.gemspec"
 end
+namespace :package do
+  desc "Build the installable gem with the minimal browser WASM"
+  task minimal: ["build:wasm_minimal", :test] do
+    sh "gem", "build", "wani.gemspec"
+  end
+end
 
 desc "Test, bump the patch version, commit, and push a release tag to origin"
 task :release do

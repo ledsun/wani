@@ -21,7 +21,7 @@ module Wani
         File.write(FILES[1], originals.fetch(FILES[1]).gsub("wani (#{version})", "wani (#{next_version})"))
         File.write(FILES[2], originals.fetch(FILES[2]).gsub("wani-#{version}.gem", "wani-#{next_version}.gem"))
 
-        command "bundle", "exec", "rake", "package"
+        command "bundle", "exec", "rake", "package:minimal"
         command "npm", "test"
         command "bundle", "exec", "ruby", "scripts/smoke_package.rb"
         command "git", "diff", "--check"
