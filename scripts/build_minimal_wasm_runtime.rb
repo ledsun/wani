@@ -16,7 +16,7 @@ def build_minimal_wasm_runtime(probe, stage)
   config = cli.send(:build_config, ruby_version: "4.0", target_triplet: "wasm32-unknown-wasip1", profile: "minimal", patches: [])
   config[:default_exts] = extensions
   encoding_options = "--encs=utf_16* --transes=utf_16_32"
-  optimization = "-Os"
+  optimization = "-Oz"
   # rbwasm's build directory name omits these build settings.
   config[:suffix] += "-#{Digest::SHA256.hexdigest([extensions, encoding_options, optimization].join("\n"))[0, 16]}"
   workspace = File.expand_path("vendor/wani-wasm/#{RubyWasm::VERSION}")
