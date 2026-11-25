@@ -28,6 +28,7 @@ module Wani
           element("start-presentation").focus
         end
         element("status")[:textContent] = "準備できました"
+        schedule_remaining_layout
       end
 
       private
@@ -39,6 +40,7 @@ module Wani
       end
 
       def render_presentation
+        @layout_ready = false
         @warnings = []
         element("warnings")[:hidden] = true
         element("warnings")[:textContent] = ""
@@ -48,13 +50,44 @@ module Wani
         @presentation.diagnostics.each { |item| warn("#{item.slide ? "スライド #{item.slide}: " : ""}#{item.message}") }
         @renderer = Renderer.new(@document, @presentation)
         @sections = @presentation.slides.map { |slide| @renderer.slide(slide) }
+        @fitted = Array.new(@sections.length, false)
         element("stage").replaceChildren
+        print_pages = element("print-pages")
+        print_pages.replaceChildren
+        print_pages.setAttribute("aria-hidden", "true")
         @sections.each { |section| element("stage").appendChild(section) }
         font_sections = @sections + @presentation.slides.map { |slide| @renderer.slide(slide, notes: true) }
         Fonts.new(@document) { |message| warn(message) }.apply(@presentation.fonts, font_sections)
         @layout.wait_assets(element("stage"))
-        @sections.each_with_index { |section, index| @layout.fit_slide(section, index + 1) }
-        prepare_pages(false)
+        @layout_ready = true
+      end
+
+      def fit_once(index)
+        return if @fitted[index]
+        @layout.fit_slide(@sections[index], index + 1)
+        @fitted[index] = true
+      end
+
+      def schedule_remaining_layout
+        sections = @sections
+        index = 0
+        next_frame = ->(_timestamp) do
+          # Yield to paint and input before measuring another slide.
+          JS.global.setTimeout(-> do
+            next unless @layout_ready && @sections.equal?(sections)
+
+            index += 1 while index < sections.length && @fitted[index]
+            if index < sections.length
+              warning_count = @warnings.length
+              fit_once(index)
+              @layout.scale if @warnings.length != warning_count
+              JS.global.requestAnimationFrame(next_frame)
+            end
+            nil
+          end, 0)
+          nil
+        end
+        JS.global.requestAnimationFrame(next_frame)
       end
 
       def reload_slides
@@ -68,6 +101,7 @@ module Wani
         # The start dialog remains open when the presentation has not started.
         go(@index)
         element("status")[:textContent] = "スライドを再読み込みしました"
+        schedule_remaining_layout
       rescue => error
         warn("スライドを再読み込みできませんでした: #{error.message}")
         element("status")[:textContent] = "スライドの再読み込みに失敗しました"
@@ -119,6 +153,10 @@ module Wani
         end
         element("print").addEventListener("click") { async { print_pages(false) } }
         element("print-notes").addEventListener("click") { async { print_pages(true) } }
+        JS.global.addEventListener("beforeprint") { prepare_native_print }
+        JS.global.matchMedia("print").addEventListener("change") do |event|
+          prepare_native_print if event[:matches] == JS::True
+        end
         @document.addEventListener("keydown") do |event|
           target = event[:target]
           next if event[:ctrlKey] == JS::True || event[:altKey] == JS::True || event[:metaKey] == JS::True
@@ -197,6 +235,7 @@ module Wani
       end
 
       def go(index)
+        return unless @layout_ready
         return if @waiting_to_start && @active_number
 
         if @time_expired
@@ -207,6 +246,7 @@ module Wani
         end
         previous_number = @active_number || 0
         @index = index.clamp(0, @sections.length - 1)
+        fit_once(@index)
         if previous_number.positive? && previous_number != @index + 1
           @sections[previous_number - 1].querySelectorAll(".youtube-overlay").to_a.each(&:remove)
         end
@@ -283,12 +323,14 @@ module Wani
         @speaker.postMessage(JSON.generate({ position: "#{@index + 1} / #{@sections.length}", title: slide.title, html: slide.html, notes_html: slide.notes_html, page_footnote: slide.page_footnote }), JS.global[:location][:origin])
       end
 
-      def prepare_pages(notes)
+      def populate_print_pages(notes)
         pages = element("print-pages")
         pages.replaceChildren
         @presentation.slides.each_with_index do |slide, index|
+          fit_once(index)
           [false, *(notes ? [true] : [])].each do |is_note|
             section = is_note ? @renderer.slide(slide, notes: true) : @sections[index].cloneNode(true)
+            section[:classList].remove("active")
             section.querySelectorAll(".youtube-overlay").to_a.each(&:remove)
             if is_note
               element("stage").appendChild(section)
@@ -301,13 +343,27 @@ module Wani
             pages.appendChild(sheet)
           end
         end
-        @layout.wait_assets(pages)
         pages.setAttribute("aria-hidden", "false")
-        element("status")[:textContent] = "印刷準備完了 (#{pages[:childElementCount].to_i} ページ)"
+        pages
+      end
+
+      def prepare_native_print
+        return unless @layout_ready && element("print-pages")[:childElementCount].to_i.zero?
+
+        # Native printing can enter print media before the remaining slides are fitted.
+        viewport = element("viewport")
+        viewport.setAttribute("data-wani-print-fitting", "")
+        populate_print_pages(false)
+      ensure
+        viewport&.removeAttribute("data-wani-print-fitting")
       end
 
       def print_pages(notes)
-        prepare_pages(notes)
+        return unless @layout_ready
+
+        pages = populate_print_pages(notes)
+        @layout.wait_assets(pages)
+        element("status")[:textContent] = "印刷準備完了 (#{pages[:childElementCount].to_i} ページ)"
         JS.global.print
       end
     end

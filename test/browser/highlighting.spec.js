@@ -41,6 +41,7 @@ async function open(page, markdown, slide = 1) {
 
 test('highlighting is styled before fitting and shared with speaker notes and PDF', async ({ page }, info) => {
   await page.addInitScript(() => {
+    window.print = () => {};
     window.highlightMeasurements = [];
     const descriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollWidth');
     Object.defineProperty(Element.prototype, 'scrollWidth', { ...descriptor, get() {

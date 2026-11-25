@@ -96,6 +96,7 @@ test('page numbers remain when printing', async ({ page }) => {
 });
 
 test('print and notes use each footnote and logical slide number', async ({ page }, info) => {
+  await page.addInitScript(() => { window.print = () => {}; });
   await ready(page);
   await page.locator('#print-notes').click();
   await expect(page.locator('#status')).toContainText('8 ページ');

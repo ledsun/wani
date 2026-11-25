@@ -135,7 +135,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
   .decorations { display: none !important; }
   body { margin: 0; background: white; }
   .presentation-view { display: block; height: auto; }
-  body > :not(#print-pages) { display: none !important; }
+  body > :not(#print-pages, #viewport[data-wani-print-fitting]) { display: none !important; }
+  #viewport[data-wani-print-fitting] { position: fixed; visibility: hidden; }
   #print-pages { display: block; }
   .print-sheet { width: 320mm; height: 180mm; overflow: hidden; break-after: page; position: relative; }
   .print-sheet:last-child { break-after: auto; }

@@ -18,13 +18,12 @@ async function inspect(buffer) {
 }
 
 test('normal and alternating-notes PDFs retain content, images and page footnote', async ({ page }, info) => {
+  // Use page.pdf() to print without opening a competing native dialog.
+  await page.addInitScript(() => { window.print = () => {}; });
   await page.goto('/#slide=1');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   await expect(page).toHaveTitle('Ruby in your browser');
-  // Ctrl+P also has a prepared normal DOM immediately after startup.
-  await expect(page.locator('#print-pages > .print-sheet')).toHaveCount(3);
-  await page.locator('#print').click();
-  await expect(page.locator('#status')).toContainText('3 ページ');
+  await expect(page.locator('#print-pages > .print-sheet')).toHaveCount(0);
   const normal = await inspect(await page.pdf({ preferCSSPageSize: true, printBackground: true, path: info.outputPath('slides.pdf') }));
   expect(normal).toHaveLength(3);
   expect(normal[0]).toContain('Ruby in your browser');

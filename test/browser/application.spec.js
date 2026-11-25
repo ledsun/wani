@@ -92,6 +92,29 @@ test('all navigation keys, hash deep links, hash changes and boundaries', async 
   await expect(page).toHaveURL(/#slide=3$/);
 });
 
+test('fits the linked slide first and fits an unmeasured slide on navigation', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.addInitScript(() => {
+    const observer = new MutationObserver(() => {
+      if (document.querySelector('#status')?.textContent !== '準備できました') return;
+      observer.disconnect();
+      const bodies = [...document.querySelectorAll('#stage > .slide .body')];
+      window.waniFittedAtReady = bodies.map(body => Boolean(body.style.fontSize));
+      document.querySelector('#next').click();
+      window.waniNextFitted = Boolean(document.querySelector('#stage .active .body').style.fontSize);
+    });
+    observer.observe(document, { childList: true, subtree: true, characterData: true });
+  });
+  await ready(page, '#slide=2');
+  expect(await page.evaluate(() => window.waniFittedAtReady)).toEqual([false, true, false]);
+  expect(await page.evaluate(() => window.waniNextFitted)).toBe(true);
+  await expect(page.locator('#position')).toHaveText('3 / 3');
+  await expect(page.locator('#stage > .slide .body').first()).toHaveAttribute('style', /font-size:/);
+  await expect(page.locator('#print-pages > .print-sheet')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('body fits, window resize scales and titleless PNG JPEG WebP images load', async ({ page }) => {
   await ready(page);
   const fit = await page.locator('.slide.active').evaluate(slide => {
