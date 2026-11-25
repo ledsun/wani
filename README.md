@@ -76,6 +76,17 @@ notes:
 
 詳細は [Markdown記法ガイド](docs/markdown.md) を参照してください。
 
+### コードの構文ハイライト
+
+コードフェンスの開始行に `ruby` などの言語タグを書くと、スライドやノートで構文ハイライトが有効になります。対応するタグは以下のとおりです。
+
+- `ruby` (`rb`)、`python` (`py`)、`shell` (`bash`、`zsh`、`ksh`、`sh`)、`sql`
+- `javascript` (`js`)、`typescript` (`ts`)、`jsx` (`react`)、`tsx`
+- `html`、`css`、`xml`、`json`、`yaml` (`yml`)
+- `markdown` (`md`、`mkd`)、`diff` (`patch`、`udiff`)、`plaintext` (`text`)
+
+言語タグを省略した場合や対応外のタグを使った場合は、通常のコードブロックとして表示します。
+
 ## フォント文字サイズを自動調整
 
 - タイトルは1行に収める。表紙では `<br>` で改行できる

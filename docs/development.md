@@ -126,7 +126,9 @@ push に失敗した場合はローカルのコミットとタグが残ります
 
 `SafeHTML`は言語指定付きコードブロックを処理するときにRougeを遅延読み込みします。未知の言語はエスケープ済みのプレーンHTMLに戻します。スライドとノートは同じ処理を使います。
 
-`bundle exec rake build:wasm`はRougeをWASMへ同梱し、`assets/highlight.css`（Githubテーマ）と`assets/rouge.LICENSE`も生成します。これらの生成ファイルはリポジトリに含め、直接編集せずビルドで更新してください。CSSはメイン画面と発表者画面の両方で読み込みます。
+WASM に同梱する lexer を変更するときは、[README の対応言語一覧](../README.md#コードの構文ハイライト) も更新します。
+
+`bundle exec rake build:wasm`は`assets/highlight.css`（Githubテーマ）と`assets/rouge.LICENSE`も生成します。これらの生成ファイルはリポジトリに含め、直接編集せずビルドで更新してください。CSSはメイン画面と発表者画面の両方で読み込みます。
 
 WASMは配布ランタイム内のStringScannerを使用します。ネイティブ側の`strscan`とはパッチバージョンが異なる場合があります。依存更新時には`test/browser/parity.spec.js`でネイティブRubyとの出力一致を確認してください。ビルドのsource digestにはcore/browserのソースに加えてlockfile、ビルドスクリプト、bootstrapを含めます。
 

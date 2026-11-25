@@ -6,6 +6,21 @@ require "digest"
 require "zlib"
 require_relative "../lib/wani/version"
 
+def prune_browser_rouge(lib)
+  lexers = %w[css diff html javascript json jsx markdown plain_text python ruby shell sql tsx typescript xml yaml]
+  Dir.children(File.join(lib, "rouge/lexers")).each do |entry|
+    # Keep auxiliary directories for the selected lexers, such as TypeScript.
+    FileUtils.rm_r(File.join(lib, "rouge/lexers", entry)) unless lexers.include?(File.basename(entry, ".rb"))
+  end
+  FileUtils.rm_r(File.join(lib, "rouge/demos"))
+
+  # Rouge 5.1.0 preloads Julia before discovering the installed lexers.
+  entrypoint = File.join(lib, "rouge.rb")
+  source = File.read(entrypoint)
+  abort "Unexpected Rouge entrypoint; review the browser lexer list" unless source.sub!("  require_relative 'rouge/lexers/julia'\n", "")
+  File.write(entrypoint, source)
+end
+
 minimal = ARGV == ["--minimal"]
 abort "Usage: bundle exec ruby scripts/build_wasm.rb [--minimal]" unless ARGV.empty? || minimal
 require_relative "build_minimal_wasm_runtime" if minimal
@@ -32,6 +47,7 @@ Dir.chdir(root) do
       FileUtils.mkdir_p(destination)
       FileUtils.cp_r(File.join(spec.full_gem_path, "lib"), destination)
     end
+    prune_browser_rouge(File.join(app, "bundle", "rouge", "lib"))
     minimal_runtime = File.join(stage, "runtime")
     abort "Runtime preparation failed" unless system("node", "scripts/prepare_wasm_runtime.mjs", "#{runtime}/ruby+stdlib.wasm", minimal_runtime)
     mappings = [

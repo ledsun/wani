@@ -99,4 +99,7 @@ test('plain code leaves Rouge unloaded and language-tagged code loads it on dema
   const html = await page.evaluate(() => window.rubyVM.eval('Wani::Core::Parser.new.parse("```rb\\nputs 1\\n```\\n").slides.first.html').toString());
   expect(html).toContain('<pre class="highlight">');
   expect(html).toContain('<span class=');
+  const julia = await page.evaluate(() => window.rubyVM.eval('Wani::Core::Parser.new.parse("```julia\\nprintln(1 < 2)\\n```\\n").slides.first.html').toString());
+  expect(julia).toContain('<pre><code>println(1 &lt; 2)');
+  expect(julia).not.toContain('class="highlight"');
 });
