@@ -4,7 +4,8 @@ import { createHash } from 'node:crypto';
 
 test('browser uses freshly packed core/browser sources and the pinned loader', async () => {
   const manifest = JSON.parse(await readFile('assets/build.json', 'utf8'));
-  const paths = ['Gemfile.lock', 'scripts/build_wasm.rb', 'scripts/prepare_wasm_runtime.mjs', 'assets/bootstrap.rb'];
+  const paths = ['Gemfile.lock', 'scripts/build_wasm.rb', 'scripts/build_minimal_wasm_runtime.rb',
+    'scripts/detect_wasm_extensions.mjs', 'scripts/prepare_wasm_runtime.mjs', 'assets/bootstrap.rb', 'templates/slides.md'];
   for (const folder of ['core', 'browser']) {
     for (const name of await readdir(`lib/wani/${folder}`)) {
       if (name.endsWith('.rb')) paths.push(`lib/wani/${folder}/${name}`);

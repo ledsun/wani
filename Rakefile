@@ -8,6 +8,10 @@ namespace :build do
   task :wasm do
     ruby "scripts/build_wasm.rb"
   end
+  desc "Detect native extensions and build a smaller browser WASM"
+  task :wasm_minimal do
+    ruby "scripts/build_wasm.rb", "--minimal"
+  end
 end
 desc "Build the installable gem, including freshly packed browser assets"
 task package: ["build:wasm", :test] do
