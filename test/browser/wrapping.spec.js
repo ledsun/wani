@@ -35,6 +35,42 @@ test('body wrapping uses rendered width at twenty fullwidth characters and respe
   await expect(page.locator('#warnings')).toBeHidden();
 });
 
+test('a table gives each column the same extra width when its contents fit', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({
+    body: `# 表紙
+
+---
+
+# ファイルサイズ
+
+| \`wani.wasm\` のベース | MiB |
+| --- | --- |
+| \`ruby+stdlib.wasm\` | 33.55 |
+| \`ruby.wasm\` | 19.55 |
+| \`ruby.wasm\`のminimalビルド | 13.74 |
+
+あ
+`,
+  }));
+  await page.goto('/#slide=2');
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  const table = page.locator('.slide.active table');
+  const extra = await table.evaluate(node => {
+    const widths = table => [...table.rows[0].cells].map(cell => cell.getBoundingClientRect().width);
+    const actual = widths(node);
+    const natural = node.cloneNode(true);
+    natural.querySelector('colgroup')?.remove();
+    Object.assign(natural.style, { position: 'absolute', visibility: 'hidden', width: 'max-content' });
+    node.after(natural);
+    const required = widths(natural);
+    natural.remove();
+    return actual.map((width, index) => width - required[index]);
+  });
+  expect(Math.min(...extra)).toBeGreaterThan(30);
+  expect(Math.abs(extra[0] - extra[1])).toBeLessThan(2);
+  await expect(page.locator('#warnings')).toBeHidden();
+});
+
 test('table fitting keeps short cells on one line and wraps long cells', async ({ page }) => {
   const short = 'あ'.repeat(15);
   const long = 'あ'.repeat(30);

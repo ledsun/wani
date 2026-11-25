@@ -63,6 +63,7 @@ module Wani
         end
         body = section.querySelector(".body")
         body[:style][:marginTop] = ""
+        body.querySelectorAll("colgroup[data-wani-columns]").to_a.each(&:remove)
         prepare_wrapping(body)
         fit_images(body)
         tables = body.querySelectorAll("table").to_a
@@ -81,10 +82,9 @@ module Wani
             line[:style][:whiteSpace] = "normal"
           end
         end
-        unless cover
-          fit_font(body, BODY_MIN, BODY_MAX) unless overflowing_tables.empty?
-          add_title_gap(section, title, body)
-        end
+        fit_font(body, BODY_MIN, BODY_MAX) unless cover || overflowing_tables.empty?
+        tables.each { |table| distribute_table_space(table) }
+        add_title_gap(section, title, body) unless cover
         body_fits = if cover
           cover_body_fits?(body)
         else
@@ -178,6 +178,41 @@ module Wani
 
       def table_overflows?(table)
         table[:offsetWidth].to_i > table[:parentElement][:clientWidth].to_i
+      end
+
+      def distribute_table_space(table)
+        return unless table.querySelector(":scope > colgroup") == JS::Null
+        rows = table[:rows].to_a
+        return if rows.empty?
+        cells = rows.first[:cells].to_a
+        return if cells.length < 2
+        return unless rows.all? do |row|
+          row_cells = row[:cells].to_a
+          row_cells.length == cells.length &&
+            row_cells.all? { |cell| cell[:colSpan].to_i == 1 && cell[:rowSpan].to_i == 1 }
+        end
+
+        available = table.getBoundingClientRect[:width].to_f
+        style = table[:style]
+        original = style[:cssText].to_s
+        style[:width] = "max-content"
+        style[:maxWidth] = "none"
+        spare = available - table.getBoundingClientRect[:width].to_f
+        widths = cells.map { |cell| cell.getBoundingClientRect[:width].to_f }
+        style[:cssText] = original
+        return unless spare.positive?
+
+        widths.map! { |width| width + spare / cells.length }
+        total = widths.sum
+        columns = @document.createElement("colgroup")
+        columns.setAttribute("data-wani-columns", "")
+        widths.each do |width|
+          column = @document.createElement("col")
+          column[:style][:width] = "#{100 * width / total}%"
+          columns.appendChild(column)
+        end
+        first_section = table.querySelector(":scope > thead, :scope > tbody, :scope > tfoot, :scope > tr")
+        table.insertBefore(columns, first_section)
       end
 
       def fits?(node)
