@@ -74,7 +74,7 @@ module Wani
             fit_font(body, BODY_MIN, COVER_BODY_SIZE) { tables.none? { |table| table_overflows?(table) } }
           end
         else
-          fit_font(body, BODY_MIN, BODY_MAX)
+          fit_font(body, BODY_MIN, BODY_MAX) { body_fits?(body, tables) }
         end
         overflowing_tables = tables.select { |table| table_overflows?(table) }
         overflowing_tables.each do |table|
@@ -82,13 +82,15 @@ module Wani
             line[:style][:whiteSpace] = "normal"
           end
         end
-        fit_font(body, BODY_MIN, BODY_MAX) unless cover || overflowing_tables.empty?
+        unless cover || overflowing_tables.empty?
+          fit_font(body, BODY_MIN, BODY_MAX) { body_fits?(body, tables) }
+        end
         tables.each { |table| distribute_table_space(table) }
-        add_title_gap(section, title, body) unless cover
+        add_title_gap(section, title, body, tables) unless cover
         body_fits = if cover
           cover_body_fits?(body)
         else
-          fits?(body)
+          body_fits?(body, tables)
         end
         @warn.call("スライド #{number}: 本文が収まりません: #{body[:textContent].to_s[0, 120]}") unless body_fits
         if section[:classList].contains("multiline-title") == JS::True
@@ -127,15 +129,15 @@ module Wani
 
       private
 
-      def add_title_gap(section, title, body)
-        return if title[:style][:display].to_s == "none" || body[:children].to_a.empty? || !fits?(body)
+      def add_title_gap(section, title, body, tables)
+        return if title[:style][:display].to_s == "none" || body[:children].to_a.empty? || !body_fits?(body, tables)
         scale = section.getBoundingClientRect[:width].to_f / WIDTH
         return if scale <= 0
         bottom = body[:children].to_a.map { |child| child.getBoundingClientRect[:bottom].to_f }.max
         spare = (body.getBoundingClientRect[:bottom].to_f - bottom) / scale
         gap = [[spare * 0.2, TITLE_GAP_MAX].min, 0].max
         body[:style][:marginTop] = "#{gap}px"
-        body[:style][:marginTop] = "" unless fits?(body)
+        body[:style][:marginTop] = "" unless body_fits?(body, tables)
       end
 
       def prepare_wrapping(body)
@@ -217,6 +219,15 @@ module Wani
 
       def fits?(node)
         node[:scrollWidth].to_i <= node[:clientWidth].to_i + 1 && node[:scrollHeight].to_i <= node[:clientHeight].to_i + 1
+      end
+
+      def body_fits?(body, tables)
+        return false unless fits?(body)
+        return true if tables.empty?
+
+        # Integer scroll heights can hide a clipped table border.
+        bottom = body.getBoundingClientRect[:bottom].to_f
+        tables.all? { |table| table.getBoundingClientRect[:bottom].to_f <= bottom }
       end
 
       def cover_body_fits?(body)

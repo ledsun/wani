@@ -48,13 +48,14 @@ test('a table gives each column the same extra width when its contents fit', asy
 | \`ruby+stdlib.wasm\` | 33.55 |
 | \`ruby.wasm\` | 19.55 |
 | \`ruby.wasm\`のminimalビルド | 13.74 |
-
-あ
 `,
   }));
   await page.goto('/#slide=2');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   const table = page.locator('.slide.active table');
+  expect(await table.evaluate(node =>
+    node.getBoundingClientRect().bottom <= node.closest('.body').getBoundingClientRect().bottom
+  )).toBe(true);
   const extra = await table.evaluate(node => {
     const widths = table => [...table.rows[0].cells].map(cell => cell.getBoundingClientRect().width);
     const actual = widths(node);
