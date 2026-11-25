@@ -22,6 +22,21 @@ RubyGems・Bundler・Prism・テスト用 gem は収録しません。C 拡張�
 依存ライブラリを追加したときは、このスクリプトの収録リストも確認し、WASM を再ビルドして
 ブラウザーテストを実行してください。遅延読み込みに対応するため、標準ライブラリはコンポーネント単位で残します。
 
+### WASM で使う標準拡張の検出
+
+`bundle exec rake build:wasm` の後に実行します。WASM 上で Wani のブラウザー用コードを読み込み、
+YAML 設定とコードハイライトを含むテンプレートを解析して、ロードされた標準拡張を
+Ruby の `--with-ext` に渡せるカンマ区切りの形式で標準出力に出します。
+
+```sh
+node scripts/detect_wasm_extensions.mjs
+node scripts/detect_wasm_extensions.mjs --wasm /path/to/wani.wasm path/to/slides.md
+```
+
+Markdown ファイルを追加すると、その解析中に遅延ロードされた拡張も検出します。
+Ruby 本体の組み込み機能、エンコーディング関連の機能、別途組み込む `js` gem は一覧から除きます。
+結果は実行した処理に基づくため、拡張を絞った WASM の動作はブラウザーテストで確認してください。
+
 ## テストとパッケージ
 
 ```sh
