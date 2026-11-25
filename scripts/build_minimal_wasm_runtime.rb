@@ -16,8 +16,9 @@ def build_minimal_wasm_runtime(probe, stage)
   config = cli.send(:build_config, ruby_version: "4.0", target_triplet: "wasm32-unknown-wasip1", profile: "minimal", patches: [])
   config[:default_exts] = extensions
   encoding_options = "--encs=utf_16* --transes=utf_16_32"
-  # rbwasm's build directory name omits the extension list and encoding options.
-  config[:suffix] += "-#{Digest::SHA256.hexdigest([extensions, encoding_options].join("\n"))[0, 16]}"
+  optimization = "-Os"
+  # rbwasm's build directory name omits these build settings.
+  config[:suffix] += "-#{Digest::SHA256.hexdigest([extensions, encoding_options, optimization].join("\n"))[0, 16]}"
   workspace = File.expand_path("vendor/wani-wasm/#{RubyWasm::VERSION}")
   FileUtils.mkdir_p(workspace)
 
@@ -41,6 +42,9 @@ def build_minimal_wasm_runtime(probe, stage)
     # CRuby's makefiles forward ENCS to the static encoding generator.
     executor.define_singleton_method(:system) do |*args, chdir: nil, env: nil|
       env = (env || {}).merge("ENCS" => encoding_options) if args.first == "make"
+      if File.basename(args.first) == "configure" && args.include?("wasm32-wasi")
+        args << "optflags=#{optimization} -fno-fast-math"
+      end
       super(*args, chdir: chdir, env: env)
     end
     tarball = packager.ruby_core_build.build(executor, {})
