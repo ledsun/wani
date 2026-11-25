@@ -9,6 +9,7 @@ module Wani
       TITLE_MIN = 24
       TITLE_MAX = 220
       NO_WRAP_EMS = 20
+      TABLE_NO_WRAP_EMS = 15
       TITLE_GAP_MAX = 64
 
       def initialize(document, &warn)
@@ -64,13 +65,27 @@ module Wani
         body[:style][:marginTop] = ""
         prepare_wrapping(body)
         fit_images(body)
-        if section[:classList].contains("cover") == JS::True
+        tables = body.querySelectorAll("table").to_a
+        cover = section[:classList].contains("cover") == JS::True
+        if cover
           body[:style][:fontSize] = "#{COVER_BODY_SIZE}px"
+          if tables.any? { |table| table_overflows?(table) }
+            fit_font(body, BODY_MIN, COVER_BODY_SIZE) { tables.none? { |table| table_overflows?(table) } }
+          end
         else
           fit_font(body, BODY_MIN, BODY_MAX)
+        end
+        overflowing_tables = tables.select { |table| table_overflows?(table) }
+        overflowing_tables.each do |table|
+          table.querySelectorAll("th [data-wani-line], td [data-wani-line]").to_a.each do |line|
+            line[:style][:whiteSpace] = "normal"
+          end
+        end
+        unless cover
+          fit_font(body, BODY_MIN, BODY_MAX) unless overflowing_tables.empty?
           add_title_gap(section, title, body)
         end
-        body_fits = if section[:classList].contains("cover") == JS::True
+        body_fits = if cover
           cover_body_fits?(body)
         else
           fits?(body)
@@ -130,8 +145,11 @@ module Wani
           line.replaceWith(*line[:childNodes].to_a)
         end
         body[:style][:fontSize] = "#{BODY_MIN}px"
-        body.querySelectorAll("p, h1, h2, h3, h4, h5, h6, li").to_a.each do |block|
-          next unless block.querySelector("p, ul, ol") == JS::Null
+        body.querySelectorAll("p, h1, h2, h3, h4, h5, h6, li, th, td").to_a.each do |block|
+          cell = %w[TH TD].include?(block[:tagName].to_s)
+          nested_blocks = cell ? "p, h1, h2, h3, h4, h5, h6, ul, ol, pre, table" : "p, ul, ol"
+          next unless block.querySelector(nested_blocks) == JS::Null
+          threshold = cell ? TABLE_NO_WRAP_EMS : NO_WRAP_EMS
           breaks = block.querySelectorAll("br").to_a
           # Work backwards so extracting a range does not invalidate the next.
           (0..breaks.length).to_a.reverse_each do |index|
@@ -146,7 +164,7 @@ module Wani
             range.insertNode(line)
 
             reference = @document.createElement("span")
-            reference[:textContent] = "あ" * NO_WRAP_EMS
+            reference[:textContent] = "あ" * threshold
             reference[:style][:position] = "absolute"
             reference[:style][:whiteSpace] = "nowrap"
             block.appendChild(reference)
@@ -156,6 +174,10 @@ module Wani
             reference.remove
           end
         end
+      end
+
+      def table_overflows?(table)
+        table[:offsetWidth].to_i > table[:parentElement][:clientWidth].to_i
       end
 
       def fits?(node)
@@ -176,7 +198,7 @@ module Wani
         while low <= high
           middle = (low + high) / 2
           node[:style][:fontSize] = "#{middle}px"
-          if fits?(node)
+          if block_given? ? yield : fits?(node)
             best, low = middle, middle + 1
           else
             high = middle - 1

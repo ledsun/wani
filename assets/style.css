@@ -65,7 +65,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #557e64; outline-offs
 .body code { font-family: "UDEV Gothic", "Zen Kaku Gothic New", monospace; font-size: .8em; }
 .body blockquote { border-left: .08em solid #b6cbb9; margin: .4em 0; padding-left: .6em; }
 .body table { border-collapse: collapse; width: 100%; }
-.body th, .body td { border: 1px solid #bac8bd; padding: .15em .3em; }
+.body th, .body td { border: 1px solid #bac8bd; padding: .15em .3em; overflow-wrap: anywhere; }
 .body img { display: block; object-fit: contain; max-width: 100%; }
 .body.image-columns { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 6%; text-align: left; }
 .image-columns > .image-column-image, .image-columns > .image-column-text { flex: 0 0 47%; min-width: 0; margin: 0; }

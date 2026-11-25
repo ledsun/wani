@@ -34,3 +34,50 @@ test('body wrapping uses rendered width at twenty fullwidth characters and respe
   await expect(page.locator('#stage strong')).toHaveText('綺麗なUI');
   await expect(page.locator('#warnings')).toBeHidden();
 });
+
+test('table fitting keeps short cells on one line and wraps long cells', async ({ page }) => {
+  const short = 'あ'.repeat(15);
+  const long = 'あ'.repeat(30);
+  const wideRow = value => `| ${Array(9).fill(value).join(' | ')} |`;
+  await page.route('**/talk/slides.md', route => route.fulfill({
+    body: `# 表紙
+
+---
+
+# ファイルサイズ
+
+| 名前 | 圧縮前 | 圧縮後 |
+| --- | --- | --- |
+| ${short} | \`35,182,903\` B | ${short} |
+| ${long} | 20,502,957 B | ${short} |
+
+---
+
+# 列が多い表
+
+${wideRow('見出し')}
+${wideRow('---')}
+${wideRow(short)}
+`,
+  }));
+  await page.goto('/#slide=2');
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  const body = page.locator('.slide.active .body');
+  const row = body.locator('tbody tr').first();
+  await expect(row.locator('td [data-wani-line]')).toHaveCount(3);
+  for (const cell of await row.locator('td [data-wani-line]').all()) {
+    await expect(cell).toHaveCSS('white-space', 'nowrap');
+  }
+  const longCell = body.locator('tbody tr').nth(1).locator('td [data-wani-line]').first();
+  await expect(longCell).toHaveCSS('white-space', 'normal');
+  expect(await longCell.evaluate(line => line.getClientRects().length)).toBeGreaterThan(1);
+  expect(await body.evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+  await expect(row.locator('code')).toHaveText('35,182,903');
+  await page.keyboard.press('ArrowRight');
+  const crowdedCell = body.locator('td [data-wani-line]').first();
+  await expect(crowdedCell).toHaveCSS('white-space', 'normal');
+  const crowdedRows = await body.locator('td [data-wani-line]').evaluateAll(lines =>
+    lines.map(line => line.getClientRects().length));
+  expect(Math.max(...crowdedRows)).toBeGreaterThan(1);
+  await expect(page.locator('#warnings')).toBeHidden();
+});
