@@ -48,6 +48,23 @@ test('reloads Markdown in the same VM, keeps the page, and retains slides on fai
   expect(wasmRequests).toBe(1);
 });
 
+test('explains a lost server connection and lets the user retry', async ({ page }) => {
+  await ready(page);
+  const routePattern = '**/talk/slides.md';
+  const refuseConnection = route => route.abort('connectionrefused');
+  await page.route(routePattern, refuseConnection);
+  const reload = page.getByRole('button', { name: '再読み込み' });
+
+  await reload.click();
+  await expect(page.locator('#status')).toHaveText('WANI サーバーと通信できませんでした。サーバーが起動しているか確認し、もう一度お試しください。');
+  await expect(page.locator('.slide.active .title')).toHaveText('Ruby in your browser');
+  await expect(reload).toBeEnabled();
+
+  await page.unroute(routePattern, refuseConnection);
+  await reload.click();
+  await expect(page.locator('#status')).toHaveText('スライドを再読み込みしました');
+});
+
 test('CLI server boots packaged Ruby and renders the presentation', async ({ page }) => {
   const errors = [];
   const requests = [];

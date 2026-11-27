@@ -9,6 +9,9 @@ require_relative "presentation_timer"
 module Wani
   module Browser
     class Application
+      class SlidesConnectionError < StandardError; end
+      private_constant :SlidesConnectionError
+
       def start
         @document = JS.global[:document]
         @index = 0
@@ -34,9 +37,15 @@ module Wani
       private
 
       def fetch_presentation
+        Core::Parser.new.parse(fetch_markdown)
+      end
+
+      def fetch_markdown
         response = JS.global.fetch("/talk/slides.md", { cache: "no-store" }.to_js).await
         raise "Markdown を読み込めません (HTTP #{response[:status].to_i})" unless response[:ok] == JS::True
-        Core::Parser.new.parse(response.text.await.to_s)
+        response.text.await.to_s
+      rescue JS::Error
+        raise SlidesConnectionError, "WANI サーバーと通信できませんでした。サーバーが起動しているか確認し、もう一度お試しください。"
       end
 
       def render_presentation
@@ -102,6 +111,8 @@ module Wani
         go(@index)
         element("status")[:textContent] = "スライドを再読み込みしました"
         schedule_remaining_layout
+      rescue SlidesConnectionError => error
+        element("status")[:textContent] = error.message
       rescue => error
         warn("スライドを再読み込みできませんでした: #{error.message}")
         element("status")[:textContent] = "スライドの再読み込みに失敗しました"
