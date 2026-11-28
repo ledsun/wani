@@ -35,6 +35,7 @@ Dir.chdir(root) do
   source_digest = Digest::SHA256.new
   build_sources = %w[Gemfile.lock scripts/build_wasm.rb scripts/build_wasm_runtime.rb
     scripts/detect_wasm_extensions.mjs assets/bootstrap.rb templates/slides.md]
+  build_sources << "scripts/patches/#{File.basename(WANI_WASM_PRISM_ONLY_PATCH)}"
   (Dir["lib/wani/{core,browser}/**/*.rb"] + build_sources).sort.each { |file| source_digest << file << File.binread(file) }
   Dir.mktmpdir("wani-pack-") do |stage|
     app = File.join(stage, "app")
@@ -72,6 +73,6 @@ Dir.chdir(root) do
   FileUtils.cp(File.join(Gem::Specification.find_by_name("rouge").full_gem_path, "LICENSE"), "assets/rouge.LICENSE")
   FileUtils.cp(loader, "assets/runtime.pr672.js")
   %w[LICENSE NOTICE].each { |name| FileUtils.cp("#{loader_root}/#{name}", "assets/runtime.#{name}") }
-  File.write("assets/build.json", JSON.pretty_generate({ version: Wani::VERSION, source_sha256: source_digest.hexdigest, loader_commit: provenance.fetch("commit"), wasm_sha256: Digest::SHA256.file("assets/wani.wasm").hexdigest }))
+  File.write("assets/build.json", JSON.pretty_generate({ version: Wani::VERSION, source_sha256: source_digest.hexdigest, loader_commit: provenance.fetch("commit"), wasm_profile: minimal ? "minimal" : "full", wasm_sha256: Digest::SHA256.file("assets/wani.wasm").hexdigest }))
   puts "Built assets/wani.wasm (#{File.size('assets/wani.wasm')} bytes)"
 end

@@ -1,0 +1,29 @@
+--- a/parse.y
++++ b/parse.y
+@@ -7564,5 +7564 @@
+-    p->lex.gets = gets;
+-    p->lex.input = input;
+-    p->lex.pbeg = p->lex.pcur = p->lex.pend = 0;
+-
+-    return yycompile(p, fname, line);
++    rb_raise(rb_eNotImpError, "the parse.y parser is unavailable in this build");
+--- a/parse.c
++++ b/parse.c
+@@ -19030,5 +19030 @@
+-    p->lex.gets = gets;
+-    p->lex.input = input;
+-    p->lex.pbeg = p->lex.pcur = p->lex.pend = 0;
+-
+-    return yycompile(p, fname, line);
++    rb_raise(rb_eNotImpError, "the parse.y parser is unavailable in this build");
+--- a/internal/parse.h
++++ b/internal/parse.h
+@@ -24 +24 @@
+-#define rb_ruby_prism_p() (rb_ruby_default_parser() == RB_DEFAULT_PARSER_PRISM)
++#define rb_ruby_prism_p() 1
+--- a/ruby.c
++++ b/ruby.c
+@@ -1471,3 +1470,0 @@
+-        else if (strcmp("parse.y", s) == 0) {
+-            rb_ruby_default_parser_set(RB_DEFAULT_PARSER_PARSE_Y);
+-        }

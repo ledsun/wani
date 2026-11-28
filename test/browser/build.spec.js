@@ -6,7 +6,8 @@ import { DefaultRubyVM } from '@ruby/wasm-wasi/dist/node';
 test('browser uses freshly packed core/browser sources and the pinned loader', async () => {
   const manifest = JSON.parse(await readFile('assets/build.json', 'utf8'));
   const paths = ['Gemfile.lock', 'scripts/build_wasm.rb', 'scripts/build_wasm_runtime.rb',
-    'scripts/detect_wasm_extensions.mjs', 'assets/bootstrap.rb', 'templates/slides.md'];
+    'scripts/detect_wasm_extensions.mjs', 'scripts/patches/ruby-4.0.10-prism-only.patch',
+    'assets/bootstrap.rb', 'templates/slides.md'];
   for (const folder of ['core', 'browser']) {
     for (const name of await readdir(`lib/wani/${folder}`)) {
       if (name.endsWith('.rb')) paths.push(`lib/wani/${folder}/${name}`);
@@ -23,4 +24,25 @@ test('packaged CRuby is 4.0.10 and compile_file selects Prism', async () => {
   const { vm } = await DefaultRubyVM(await WebAssembly.compile(await readFile('assets/wani.wasm')));
   expect(vm.eval('RUBY_VERSION').toString()).toBe('4.0.10');
   expect(vm.eval(`RubyVM::InstructionSequence.compile_file('/wani/lib/wani/browser/application.rb').to_a[4].fetch(:parser)`).toString()).toBe('prism');
+});
+
+test('legacy parser APIs follow the WASM build profile', async () => {
+  const manifest = JSON.parse(await readFile('assets/build.json', 'utf8'));
+  expect(['full', 'minimal']).toContain(manifest.wasm_profile);
+  const { vm } = await DefaultRubyVM(await WebAssembly.compile(await readFile('assets/wani.wasm')));
+  const outcomes = vm.eval(`
+    [
+      -> { RubyVM::InstructionSequence.compile_parsey("42").eval },
+      -> { RubyVM::AbstractSyntaxTree.parse("42").type }
+    ].map do |call|
+      begin
+        call.call
+      rescue NotImplementedError => error
+        error.class.name
+      end
+    end.join(",")
+  `).toString();
+  expect(outcomes).toBe(manifest.wasm_profile === 'minimal'
+    ? 'NotImplementedError,NotImplementedError'
+    : '42,SCOPE');
 });

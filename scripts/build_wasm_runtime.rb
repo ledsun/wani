@@ -10,6 +10,8 @@ require "tmpdir"
 WANI_WASM_RUBY_VERSION = "4.0.10"
 WANI_WASM_RUBY_SHA256 = "b53eef3371fa5d3e3b74340edcd015f06d5d8853968d4e539a5264fce41ed9f1"
 
+WANI_WASM_PRISM_ONLY_PATCH = File.join(__dir__, "patches/ruby-#{WANI_WASM_RUBY_VERSION}-prism-only.patch")
+
 def detect_wasm_extensions(probe)
   extensions, status = Open3.capture2("node", "scripts/detect_wasm_extensions.mjs", "--wasm", probe)
   extensions = extensions.strip
@@ -20,7 +22,7 @@ end
 def prepare_wasm_ruby_source(workspace, url)
   checkouts = File.join(workspace, "build/checkouts")
   source = File.join(checkouts, WANI_WASM_RUBY_VERSION)
-  return if File.file?(File.join(source, "configure"))
+  return source if File.file?(File.join(source, "configure"))
 
   FileUtils.mkdir_p(checkouts)
   Dir.mktmpdir("ruby-source-", checkouts) do |directory|
@@ -33,6 +35,21 @@ def prepare_wasm_ruby_source(workspace, url)
     abort "Ruby extraction failed" unless system("tar", "-xzf", archive, "-C", extracted, "--strip-components=1")
     File.rename(extracted, source)
   end
+  source
+end
+
+def prepare_prism_only_source(source, patch_digest)
+  destination = "#{source}-prism-only-#{patch_digest}"
+  return destination if File.file?(File.join(destination, "configure"))
+
+  Dir.mktmpdir("ruby-prism-only-", File.dirname(source)) do |directory|
+    extracted = File.join(directory, "source")
+    FileUtils.cp_r(source, extracted, preserve: true)
+    abort "Prism-only patch failed" unless system("patch", "--batch", "--fuzz=0", "-p1",
+      "-d", extracted, "-i", WANI_WASM_PRISM_ONLY_PATCH)
+    File.rename(extracted, destination)
+  end
+  destination
 end
 
 def build_wasm_runtime(stage, extensions: nil)
@@ -50,16 +67,19 @@ def build_wasm_runtime(stage, extensions: nil)
   encoding_options = "--encs=utf_16* --transes=utf_16_32"
   optimization = "-Oz"
   if minimal
+    patch_digest = Digest::SHA256.file(WANI_WASM_PRISM_ONLY_PATCH).hexdigest[0, 16]
     config[:default_exts] = extensions
     # rbwasm's build directory name omits these build settings.
-    config[:suffix] += "-#{Digest::SHA256.hexdigest([extensions, encoding_options, optimization].join("\n"))[0, 16]}"
+    config[:suffix] += "-#{Digest::SHA256.hexdigest([extensions, encoding_options, optimization, patch_digest].join("\n"))[0, 16]}"
   end
   workspace = File.expand_path("vendor/wani-wasm/#{RubyWasm::VERSION}")
   FileUtils.mkdir_p(workspace)
 
   File.open(File.join(workspace, "build.lock"), "w") do |lock|
     lock.flock(File::LOCK_EX)
-    prepare_wasm_ruby_source(workspace, url)
+    source = prepare_wasm_ruby_source(workspace, url)
+    # Use the unmodified host Ruby and patch only the lightweight WASI build.
+    prism_only_source = prepare_prism_only_source(source, patch_digest) if minimal
     archive = File.join(workspace, "#{js_name}.gem")
     unless File.file?(archive)
       bytes = Gem::RemoteFetcher.fetcher.fetch_path("https://rubygems.org/downloads/#{js_name}.gem")
@@ -79,6 +99,7 @@ def build_wasm_runtime(stage, extensions: nil)
     executor.define_singleton_method(:system) do |*args, chdir: nil, env: nil|
       env = (env || {}).merge("ENCS" => encoding_options) if minimal && args.first == "make"
       if minimal && File.basename(args.first) == "configure" && args.include?("wasm32-wasi")
+        args[0] = File.join(prism_only_source, "configure")
         args << "optflags=#{optimization} -fno-fast-math"
       end
       super(*args, chdir: chdir, env: env)

@@ -47,9 +47,12 @@ npm test
 ```
 
 同じ CRuby 4.0.10 の通常版を検出用に使い、Wani が読み込んだ C 拡張を軽量版に組み込みます。
+軽量版は `patch` コマンドで CRuby にパッチを適用し、Ruby ソースの構文解析を Prism に固定します。
+旧パーサー `parse.y` の本体をリンクから外すため、軽量版では `--parser=parse.y` を指定できず、
+`RubyVM::InstructionSequence.compile_parsey` と `RubyVM::AbstractSyntaxTree.parse` は `NotImplementedError` を送出します。
 文字コードは Ruby の組み込みの UTF-8・US-ASCII・ASCII-8BIT に加え、Psych が使う UTF-16LE／BE とその変換を組み込みます。
 CRuby の C コンパイルはサイズ優先の `-Oz` を使います。
-ビルド済みのランタイムは `vendor/wani-wasm/` に CRuby のバージョン、拡張リスト、文字コード構成、最適化設定ごとにキャッシュします。
+ビルド済みのランタイムは `vendor/wani-wasm/` に CRuby のバージョン、拡張リスト、文字コード構成、最適化設定、パッチごとにキャッシュします。
 通常版を生成するには `bundle exec rake build:wasm` を実行してください。
 
 ## テストとパッケージ
