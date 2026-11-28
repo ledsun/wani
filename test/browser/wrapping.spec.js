@@ -56,7 +56,14 @@ test('a table gives each column the same extra width when its contents fit', asy
   expect(await table.evaluate(node =>
     node.getBoundingClientRect().bottom <= node.closest('.body').getBoundingClientRect().bottom
   )).toBe(true);
-  const extra = await table.evaluate(node => {
+  const extra = await extraColumnWidths(table);
+  expect(Math.min(...extra)).toBeGreaterThan(30);
+  expect(Math.abs(extra[0] - extra[1])).toBeLessThan(2);
+  await expect(page.locator('#warnings')).toBeHidden();
+});
+
+function extraColumnWidths(table) {
+  return table.evaluate(node => {
     const widths = table => [...table.rows[0].cells].map(cell => cell.getBoundingClientRect().width);
     const actual = widths(node);
     const natural = node.cloneNode(true);
@@ -67,9 +74,29 @@ test('a table gives each column the same extra width when its contents fit', asy
     natural.remove();
     return actual.map((width, index) => width - required[index]);
   });
-  expect(Math.min(...extra)).toBeGreaterThan(30);
-  expect(Math.abs(extra[0] - extra[1])).toBeLessThan(2);
-  await expect(page.locator('#warnings')).toBeHidden();
+}
+
+test('a numbered column keeps the width required by its longest value', async ({ page }) => {
+  await page.route('**/talk/slides.md', route => route.fulfill({
+    body: `# 表紙
+
+---
+
+# ファイルサイズ
+
+| No. | ビルド構成 | 非圧縮サイズ |
+| ---: | --- | ---: |
+| 1 | ruby+stdlib.wasm | 33.55 MiB |
+| 12345 | ruby.wasm | 19.55 MiB |
+| | 軽量ビルド | 13.74 MiB |
+${Array.from({ length: 6 }, (_, index) => `| ${index + 2} | 最適化ビルド | 8.14 MiB |`).join('\n')}
+`,
+  }));
+  await page.goto('/#slide=2');
+  await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
+  const extra = await extraColumnWidths(page.locator('.slide.active table'));
+  expect(Math.abs(extra[0])).toBeLessThan(2);
+  expect(Math.min(...extra.slice(1))).toBeGreaterThan(30);
 });
 
 test('table fitting keeps short cells on one line and wraps long cells', async ({ page }) => {

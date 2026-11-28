@@ -204,7 +204,13 @@ module Wani
         style[:cssText] = original
         return unless spare.positive?
 
-        widths.map! { |width| width + spare / cells.length }
+        flexible = flexible_table_columns(table, cells)
+        if flexible.empty? || flexible.length == cells.length
+          widths.map! { |width| width + spare / cells.length }
+        else
+          flexible_width = flexible.sum { |index| widths[index] }
+          flexible.each { |index| widths[index] += spare * widths[index] / flexible_width }
+        end
         total = widths.sum
         columns = @document.createElement("colgroup")
         columns.setAttribute("data-wani-columns", "")
@@ -215,6 +221,19 @@ module Wani
         end
         first_section = table.querySelector(":scope > thead, :scope > tbody, :scope > tfoot, :scope > tr")
         table.insertBefore(columns, first_section)
+      end
+
+      def flexible_table_columns(table, headers)
+        return headers.each_index.to_a unless headers.first[:tagName].to_s == "TH"
+
+        body_rows = table[:tBodies].to_a.flat_map { |body| body[:rows].to_a }
+        headers.each_index.reject do |index|
+          title = headers[index][:textContent].to_s.strip
+          next false unless title.match?(/\A(?:no\.?|番号|#)\z/i)
+
+          numbers = body_rows.map { |row| row[:cells][index][:textContent].to_s.strip }.reject(&:empty?)
+          !numbers.empty? && numbers.all? { |number| number.match?(/\A[+-]?[0-9]+\z/) }
+        end
       end
 
       def fits?(node)
