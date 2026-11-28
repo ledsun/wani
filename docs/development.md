@@ -15,12 +15,12 @@ npm ci
 bundle exec rake build:wasm
 ```
 
-WASM は固定バージョンの npm 配布にある `ruby.wasm`（標準ライブラリなし）を土台にします。
-`scripts/prepare_wasm_runtime.mjs` が同じ配布の `ruby+stdlib.wasm` を起動し、
-JSON・YAML（Psych）・URI など必要な標準ライブラリと JS gem の Ruby コードだけを取り出して収録します。
-RubyGems・Bundler・Prism・テスト用 gem は収録しません。C 拡張は配布済み本体に組み込まれたものを使います。
-依存ライブラリを追加したときは、このスクリプトの収録リストも確認し、WASM を再ビルドして
-ブラウザーテストを実行してください。遅延読み込みに対応するため、標準ライブラリはコンポーネント単位で残します。
+CRuby 4.0.10 の公式ソースの SHA-256 を検証し、`ruby_wasm` で WASI Preview 1 向けにコンパイルします。
+初回はホスト用 C コンパイラー、`make`、`curl`、ネット接続が必要です。
+通常版は標準 C 拡張を組み込み、同じビルドから JSON・YAML（Psych）・URI など必要な標準ライブラリを選んで収録します。
+JS gem の Ruby コードも収録し、C 拡張は静的にリンクします。
+RubyGems・Bundler・Prism の Ruby ライブラリ・テスト用 gem は収録しません。
+依存ライブラリを追加したときは `scripts/build_wasm_runtime.rb` の収録リストを確認し、WASM を再ビルドしてブラウザーテストを実行してください。
 
 ### WASM で使う標準拡張の検出
 
@@ -46,12 +46,10 @@ bundle exec rake build:wasm_minimal
 npm test
 ```
 
-現在のソースで検出用 WASM を作って拡張を調べ、Ruby 4.0 の WASI Preview 1 ビルドに反映します。
+同じ CRuby 4.0.10 の通常版を検出用に使い、Wani が読み込んだ C 拡張を軽量版に組み込みます。
 文字コードは Ruby の組み込みの UTF-8・US-ASCII・ASCII-8BIT に加え、Psych が使う UTF-16LE／BE とその変換を組み込みます。
 CRuby の C コンパイルはサイズ優先の `-Oz` を使います。
-ブラウザー接続に使う `js` gem も静的に組み込みます。初回はホスト用 C コンパイラー、
-`make`、`curl`、ネット接続が必要で、依存の取得と Ruby のコンパイルに時間がかかります。
-ビルド済みのランタイムは `vendor/wani-wasm/` に拡張リスト、文字コード構成、最適化設定ごとにキャッシュします。
+ビルド済みのランタイムは `vendor/wani-wasm/` に CRuby のバージョン、拡張リスト、文字コード構成、最適化設定ごとにキャッシュします。
 通常版を生成するには `bundle exec rake build:wasm` を実行してください。
 
 ## テストとパッケージ

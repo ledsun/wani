@@ -23,19 +23,18 @@ end
 
 minimal = ARGV == ["--minimal"]
 abort "Usage: bundle exec ruby scripts/build_wasm.rb [--minimal]" unless ARGV.empty? || minimal
-require_relative "build_minimal_wasm_runtime" if minimal
+require_relative "build_wasm_runtime"
 
 root = File.expand_path("..", __dir__)
 Dir.chdir(root) do
-  runtime = "node_modules/@ruby/4.0-wasm-wasi/dist"
-  abort "Run npm ci before building wasm" unless File.file?("#{runtime}/ruby+stdlib.wasm")
+  abort "Run npm ci before building the minimal WASM" if minimal && !File.file?("node_modules/@ruby/wasm-wasi/package.json")
   loader_root = "third_party/ruby-wasm-loader"
   provenance = JSON.parse(File.read("#{loader_root}/provenance.json"))
   loader = "#{loader_root}/browser.script.iife.js"
   abort "PR loader checksum mismatch" unless Digest::SHA256.file(loader).hexdigest == provenance.fetch("loader_sha256")
   source_digest = Digest::SHA256.new
-  build_sources = %w[Gemfile.lock scripts/build_wasm.rb scripts/build_minimal_wasm_runtime.rb
-    scripts/detect_wasm_extensions.mjs scripts/prepare_wasm_runtime.mjs assets/bootstrap.rb templates/slides.md]
+  build_sources = %w[Gemfile.lock scripts/build_wasm.rb scripts/build_wasm_runtime.rb
+    scripts/detect_wasm_extensions.mjs assets/bootstrap.rb templates/slides.md]
   (Dir["lib/wani/{core,browser}/**/*.rb"] + build_sources).sort.each { |file| source_digest << file << File.binread(file) }
   Dir.mktmpdir("wani-pack-") do |stage|
     app = File.join(stage, "app")
@@ -48,19 +47,18 @@ Dir.chdir(root) do
       FileUtils.cp_r(File.join(spec.full_gem_path, "lib"), destination)
     end
     prune_browser_rouge(File.join(app, "bundle", "rouge", "lib"))
-    minimal_runtime = File.join(stage, "runtime")
-    abort "Runtime preparation failed" unless system("node", "scripts/prepare_wasm_runtime.mjs", "#{runtime}/ruby+stdlib.wasm", minimal_runtime)
+    base = build_wasm_runtime(stage)
+    runtime = File.join(stage, "runtime")
     mappings = [
-      "--dir", "#{minimal_runtime}/usr::/usr", "--dir", "#{minimal_runtime}/bundle::/bundle",
+      "--dir", "#{runtime}/usr::/usr", "--dir", "#{runtime}/bundle::/bundle",
       "--dir", "#{app}::/wani"]
     pack = ->(base, output) do
       abort "Packaging failed" unless system("bundle", "exec", "rbwasm", "pack", base, *mappings, "--output", output)
     end
-    base = "#{runtime}/ruby.wasm"
     if minimal
       probe = File.join(stage, "probe.wasm")
       pack.call(base, probe)
-      base = build_minimal_wasm_runtime(probe, stage)
+      base = build_wasm_runtime(stage, extensions: detect_wasm_extensions(probe))
     end
     pack.call(base, "assets/wani.wasm")
     Zlib::GzipWriter.open(File.join(stage, "wani.wasm.gz"), Zlib::DEFAULT_COMPRESSION) do |gzip|

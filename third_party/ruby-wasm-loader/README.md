@@ -24,8 +24,8 @@ npm run build:loader
 
 ソースの追加修正や JS の文字列置換は行わない。通常の `npm run build` は、この同梱ファイルの
 チェックサムを確認して `assets/runtime.pr672.js` にコピーするだけなので、上流ソースの再取得は不要。
-wasm 本体は npm の `@ruby/4.0-wasm-wasi@2.10.1` を基に Wani の Ruby / gem を pack する。
-JS バインディングと公開版 wasm の組み合わせはこのリポジトリのブラウザーテストで検証する。
+wasm 本体は CRuby 4.0.10 の公式ソースからビルドし、Wani の Ruby / gem を pack する。
+JS バインディングとビルドした wasm の組み合わせはこのリポジトリのブラウザーテストで検証する。
 
 ## 公式リリースへの移行
 

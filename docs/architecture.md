@@ -19,7 +19,7 @@ Ruby / JS interop の初期化に必要な `unsafe-eval` を CSP で許可して
 ## wasm とローダー
 
 [公式のパッケージング方式](https://ruby.github.io/ruby.wasm/) に従い、
-`@ruby/4.0-wasm-wasi@2.10.1` の標準ライブラリ入り wasm に `rbwasm pack` で core・browser・Pure Ruby gem を追加します。
+CRuby 4.0.10 を WASI Preview 1 向けにビルドし、`rbwasm pack` で必要な標準ライブラリ、core、browser、Pure Ruby gem を追加します。
 CLI / WEBrick / 開発ツールは含めません。ブラウザー側のアプリケーション処理は Ruby です。
 
 ローダーは [ruby/ruby.wasm#672](https://github.com/ruby/ruby.wasm/pull/672) の
