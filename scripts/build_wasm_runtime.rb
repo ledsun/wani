@@ -52,7 +52,7 @@ def prepare_prism_only_source(source, patch_digest)
   destination
 end
 
-def build_wasm_runtime(stage, extensions: nil)
+def build_wasm_runtime(stage, extensions: nil, omit_yaml: false)
   minimal = !extensions.nil?
   profile = minimal ? "minimal" : "full"
   puts "Building Ruby #{WANI_WASM_RUBY_VERSION} WASM (#{profile})"
@@ -64,7 +64,7 @@ def build_wasm_runtime(stage, extensions: nil)
   config = cli.send(:build_config, ruby_version: "4.0", target_triplet: "wasm32-unknown-wasip1", profile: profile, patches: [])
   url = "https://cache.ruby-lang.org/pub/ruby/4.0/ruby-#{WANI_WASM_RUBY_VERSION}.tar.gz"
   config[:src] = config.fetch(:src).merge(name: WANI_WASM_RUBY_VERSION, url: url)
-  encoding_options = "--encs=utf_16* --transes=utf_16_32"
+  encoding_options = "--no-encs=* --no-transes=*"
   optimization = "-Oz"
   if minimal
     patch_digest = Digest::SHA256.file(WANI_WASM_PRISM_ONLY_PATCH).hexdigest[0, 16]
@@ -112,16 +112,17 @@ def build_wasm_runtime(stage, extensions: nil)
     executor.system("tar", "-xzf", tarball, "-C", stage, *entries)
     output = File.join(stage, "#{profile}.wasm")
     executor.system(packager.full_build_options.fetch(:toolchain).wasm_opt, "--strip-debug", File.join(stage, runtime_file), "-o", output)
-    prepare_wasm_runtime(File.join(stage, stdlib), js.full_gem_path, stage) unless minimal
+    prepare_wasm_runtime(File.join(stage, stdlib), js.full_gem_path, stage, omit_yaml: omit_yaml) unless minimal
     output
   end
 end
 
-def prepare_wasm_runtime(stdlib, js_gem, stage)
+def prepare_wasm_runtime(stdlib, js_gem, stage, omit_yaml:)
   lib = File.join(stage, "runtime/usr/local/lib/ruby/4.0.0")
   FileUtils.mkdir_p(lib)
   # Keep complete components, including dependencies that are loaded while rendering.
   components = %w[date json pathname psych strscan uri yaml cgi delegate forwardable set singleton time unicode_normalize]
+  components -= %w[psych yaml] if omit_yaml
   components.each do |name|
     [name, "#{name}.rb"].each do |entry|
       source = File.join(stdlib, entry)

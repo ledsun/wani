@@ -21,6 +21,15 @@ def prune_browser_rouge(lib)
   File.write(entrypoint, source)
 end
 
+def defer_kramdown_yaml(path)
+  source = File.read(path)
+  removed = source.sub!(/^require 'yaml'\n/, "")
+  deferred = source.sub!("          val = YAML.safe_load(val)\n        rescue RuntimeError",
+    "          require 'yaml'\n          val = YAML.safe_load(val)\n        rescue LoadError, RuntimeError")
+  abort "Unexpected Kramdown YAML loading code" unless removed && deferred
+  File.write(path, source)
+end
+
 minimal = ARGV == ["--minimal"]
 abort "Usage: bundle exec ruby scripts/build_wasm.rb [--minimal]" unless ARGV.empty? || minimal
 require_relative "build_wasm_runtime"
@@ -47,8 +56,9 @@ Dir.chdir(root) do
       FileUtils.mkdir_p(destination)
       FileUtils.cp_r(File.join(spec.full_gem_path, "lib"), destination)
     end
+    defer_kramdown_yaml(File.join(app, "bundle/kramdown/lib/kramdown/options.rb")) if minimal
     prune_browser_rouge(File.join(app, "bundle", "rouge", "lib"))
-    base = build_wasm_runtime(stage)
+    base = build_wasm_runtime(stage, omit_yaml: minimal)
     runtime = File.join(stage, "runtime")
     mappings = [
       "--dir", "#{runtime}/usr::/usr", "--dir", "#{runtime}/bundle::/bundle",

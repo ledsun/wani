@@ -61,7 +61,7 @@ test('wanis build from the right, then rabbit crosses left to right and reverses
 });
 
 test('normal and notes PDFs always hide the bridge and rabbit', async ({ page }) => {
-  await ready(page, '---\ndecorations: true\n---\n' + source);
+  await ready(page, '---\n{"decorations": true}\n---\n' + source);
   for (const button of ['#print', '#print-notes']) {
     await page.locator(button).click();
     await page.emulateMedia({ media: 'print' });

@@ -10,7 +10,7 @@ GitHubで使えるすべてのMarkdown記法に対応するわけではありま
 
 ```markdown
 ---
-time_limit: 5
+{"time_limit": 5}
 ---
 
 # はじめての発表
@@ -37,11 +37,11 @@ time_limit: 5
 
 ## Front Matter：文書全体の設定
 
-ファイルの先頭に、`---` で囲んだYAMLを置けます。省略も可能です。
+ファイルの先頭に、`---` で囲んだ JSON オブジェクトを置けます。省略も可能です。
 
-```yaml
+```markdown
 ---
-time_limit: 5
+{"time_limit": 5}
 ---
 ```
 
@@ -51,17 +51,19 @@ time_limit: 5
 | `title-weight` | タイトルの文字の太さ。1〜1000の整数 | `700` |
 | `body-weight` | 本文の文字の太さ。1〜1000の整数 | `400` |
 
-`time_limit: 2.5` のような小数も使えます。`time_limit: 0` でタイマーを無効にします。
+`"time_limit"` には `2.5` のような小数も使えます。`"time_limit"` を `0` にするとタイマーを無効にします。
 文字列の `"5"`、負数、真偽値は指定できません。
 タイマーの動作は [READMEの発表タイマー](../README.md#発表タイマー) を参照してください。
 
 文字の太さは、次のようにタイトルと本文で個別に指定できます。
 
-```yaml
+```markdown
 ---
-font: Noto Sans JP
-title-weight: 500
-body-weight: 400
+{
+  "font": "Noto Sans JP",
+  "title-weight": 500,
+  "body-weight": 400
+}
 ---
 ```
 
@@ -70,8 +72,8 @@ body-weight: 400
 指定できる太さの実際の表示はフォントに依存し、該当する太さがない場合はブラウザーが近い太さを使用します。印刷・PDFにも反映されます。
 `font`で使うフォントの追加方法は [READMEのフォント設定](../README.md#fontsourceのフォントを使う) を参照してください。
 
-YAMLはマッピングで記述します。オブジェクト生成とaliasは許可しません。
-閉じる `---` がない場合や、不正なYAMLはエラーです。
+古い原稿の YAML フロントマターは、同じ設定を JSON オブジェクトに書き換えてください。たとえば `time_limit: 5` は `{"time_limit": 5}` になります。
+閉じる `---` がない場合や、内容が有効な JSON オブジェクトでない場合はエラーです。
 ページごとの脚注はFront Matterではなく、各ページの `page-footnote` コメントで指定します。
 
 ## スライドの区切り

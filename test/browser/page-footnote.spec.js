@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
-const source = '---\npage-footnote: Shared footnote\n---\n# First\n\n---\n\n# Second\n\n<!-- page-footnote: <b>Specific footnote</b> -->\n\n<!-- notes: Private notes -->\n\n---\n\n# Third\n\n<!-- page-footnote: -->\n\n---\n\n# Fourth';
+const source = '---\n{"page-footnote": "Shared footnote"}\n---\n# First\n\n---\n\n# Second\n\n<!-- page-footnote: <b>Specific footnote</b> -->\n\n<!-- notes: Private notes -->\n\n---\n\n# Third\n\n<!-- page-footnote: -->\n\n---\n\n# Fourth';
 
 async function ready(page, markdown = source) {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: markdown }));
@@ -85,7 +85,7 @@ test('only page footnotes appear and page count stays to the right of the bridge
 });
 
 test('page numbers remain when printing', async ({ page }) => {
-  await ready(page, '---\ndecorations: false\n---\n# First\n\n---\n\n# Second');
+  await ready(page, '---\n{"decorations": false}\n---\n# First\n\n---\n\n# Second');
   await page.emulateMedia({ media: 'print' });
   await expect(page.locator('#print-pages .decorations').first()).toBeHidden();
   await expect(page.locator('#print-pages .slide-number').first()).toBeVisible();

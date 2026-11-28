@@ -1,5 +1,3 @@
-require "yaml"
-
 module Wani
   module Core
     module Fonts
@@ -22,6 +20,7 @@ module Wani
       end
 
       def registry(source)
+        require "yaml"
         data = YAML.safe_load(source, aliases: false) || {}
         raise ArgumentError, "Invalid font registry" unless data.is_a?(Hash)
         fonts = data.fetch("fonts", {})

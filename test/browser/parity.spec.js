@@ -6,11 +6,11 @@ const fixtures = [
   '# Fallback\n\n```unknown\n<b>&</b>\n```\n\n```\n<script>plain</script>\n```\n',
   '# Empty\n\n```ruby\n```\n',
 
-  '---\npage-footnote: Shared\n---\n# **Title** &amp; more\n\nBody\n\n<!-- page-footnote: Page footnote -->\n\n<!--\nnotes:\nPrivate **notes**\n-->\n\n---\n\n## Next\n\n### Extra',
+  '---\n{"page-footnote": "Shared", "font": "日本語", "time_limit": 2.5}\n---\n# **Title** &amp; more\n\nBody\n\n<!-- page-footnote: Page footnote -->\n\n<!--\nnotes:\nPrivate **notes**\n-->\n\n---\n\n## Next\n\n### Extra',
   '# Code\r\n\r\n```md\r\n---\r\n<!-- notes: literal -->\r\n```\r\n\r\n---\r\n\r\nEnd',
   '# Safe\n\n<script>alert(1)</script>\n\n[bad](javascript:alert) ![bad](data:image/svg+xml,evil) [entity](jav&#x61;script:alert)',
   '',
-  '---\npage-footnote: !ruby/object:Object {}\n---',
+  '---\n{"time_limit":}\n---',
   '# Title\n\n<!-- notes: unclosed',
 ];
 
@@ -28,14 +28,18 @@ test('CRuby and browser wasm share the parser with identical models and errors',
   }
 });
 
-test('browser Ruby can read Japanese YAML encoded as UTF-16', async ({ page }) => {
+test('minimal browser Ruby parses slides without Psych', async ({ page, request }) => {
+  const build = await (await request.get('/assets/build.json')).json();
+  test.skip(build.wasm_profile !== 'minimal', 'Only the minimal build omits Psych');
   await page.goto('/#slide=1');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   const result = await page.evaluate(() => window.rubyVM.eval(String.raw`
-    source = "title: 日本語\n"
-    %w[UTF-16LE UTF-16BE].map do |encoding|
-      YAML.safe_load(source.encode(encoding)).fetch("title")
-    end.to_json
+    begin
+      require "psych"
+      "available"
+    rescue LoadError
+      "missing"
+    end
   `).toString());
-  expect(JSON.parse(result)).toEqual(['日本語', '日本語']);
+  expect(result).toBe('missing');
 });

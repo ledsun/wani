@@ -9,7 +9,7 @@ class HTTPTest < Minitest::Test
   def test_real_cli_serves_selected_file_and_rejects_escape_then_shuts_down
     directory = Dir.mktmpdir("wani-http-")
     file = File.join(directory, "other.md")
-    source = "---\nfont: Missing Font\n---\n# Selected file"
+    source = "---\n{\"font\": \"Missing Font\"}\n---\n# Selected file"
     File.write(file, source)
     File.write(File.join(directory, "private.txt"), "private")
     File.symlink("/etc/passwd", File.join(directory, "escape.svg"))

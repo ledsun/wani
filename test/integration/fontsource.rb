@@ -14,6 +14,6 @@ Dir.chdir(root) do
   abort 'Missing Japanese split subsets' unless css.scan('unicode-range:').length > 100
   abort 'Missing license' unless File.size(entry.fetch('license')) > 100
   entry.fetch('sha256').each { |file, hash| abort "Checksum mismatch: #{file}" unless Digest::SHA256.file(file).hexdigest == hash }
-  File.write('slides.md', "---\nfont: Noto Sans JP\n---\n# 日本語プレゼンテーション\n\n漢字・ひらがな・カタカナと English 123。\n\n**太字の本文**\n\n---\n\n# 隠れたスライド\n\n𠮷野家と髙橋\n\n<!-- notes: 日本語のノート -->\n")
+  File.write('slides.md', "---\n{\"font\": \"Noto Sans JP\"}\n---\n# 日本語プレゼンテーション\n\n漢字・ひらがな・カタカナと English 123。\n\n**太字の本文**\n\n---\n\n# 隠れたスライド\n\n𠮷野家と髙橋\n\n<!-- notes: 日本語のノート -->\n")
   puts "Verified #{entry['files'].length} files in #{root}"
 end

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('speaker notes show time elapsed since Start even on the final slide with no time limit', async ({ page }) => {
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\ntime_limit: 0\n---\n# First\n\n---\n\n# Last' }));
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\n{"time_limit": 0}\n---\n# First\n\n---\n\n# Last' }));
   await page.goto('/');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   await page.clock.install();
@@ -19,7 +19,7 @@ test('speaker notes show time elapsed since Start even on the final slide with n
 
 async function ready(page, limit) {
   if (limit !== undefined) {
-    await page.route('**/talk/slides.md', route => route.fulfill({ body: `---\ntime_limit: ${limit}\n---\n# One\n\n---\n\n# Two` }));
+    await page.route('**/talk/slides.md', route => route.fulfill({ body: `---\n{"time_limit": ${limit}}\n---\n# One\n\n---\n\n# Two` }));
   }
   await page.goto('/');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
@@ -153,13 +153,13 @@ test('final slide pauses the remaining time and returning resumes it', async ({ 
 });
 
 test('starting on the final slide, including a single slide, never expires', async ({ page }) => {
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\ntime_limit: 0.1\n---\n# Only slide' }));
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\n{"time_limit": 0.1}\n---\n# Only slide' }));
   await ready(page);
   await page.clock.fastForward(60_000);
   await expect(page.locator('#countdown')).toBeHidden();
   await expect(page.locator('#time-expired')).toBeHidden();
   await page.unroute('**/talk/slides.md');
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\ntime_limit: 0.1\n---\n# First\n\n---\n\n# Last' }));
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\n{"time_limit": 0.1}\n---\n# First\n\n---\n\n# Last' }));
   await page.goto('/?final-slide-test#slide=2');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   await page.clock.fastForward(60_000);
@@ -173,7 +173,7 @@ test('starting on the final slide, including a single slide, never expires', asy
 
 
 test('without a hash the first slide waits for Start before counting time', async ({ page }) => {
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\ntime_limit: 0.1\n---\n# First\n\n---\n\n# Last' }));
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\n{"time_limit": 0.1}\n---\n# First\n\n---\n\n# Last' }));
   await page.goto('/');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   await expect(page.locator('#start-overlay')).toBeVisible();
@@ -201,7 +201,7 @@ test('without a hash the first slide waits for Start before counting time', asyn
 });
 
 test('a slide hash skips Start and never starts the timer', async ({ page }) => {
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\ntime_limit: 0.1\n---\n# First\n\n---\n\n# Second\n\n---\n\n# Last' }));
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\n{"time_limit": 0.1}\n---\n# First\n\n---\n\n# Second\n\n---\n\n# Last' }));
   await page.goto('/#slide=2');
   await expect(page.locator('#status')).toHaveText('準備できました', { timeout: 60_000 });
   await page.clock.install();

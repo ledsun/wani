@@ -4,7 +4,7 @@ import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 const live = process.env.WANI_FONTSOURCE_PROJECT;
 const family = live ? 'Noto Sans JP Variable' : 'Fixture Font';
-const source = `---\nfont: ${live ? 'Noto Sans JP' : family}\n---\n# 日本語プレゼンテーション\n\n本文 **太字**\n\n---\n\n# 隠れた文字\n\n𠮷野家と髙橋`;
+const source = `---\n${JSON.stringify({ font: live ? 'Noto Sans JP' : family })}\n---\n# 日本語プレゼンテーション\n\n本文 **太字**\n\n---\n\n# 隠れた文字\n\n𠮷野家と髙橋`;
 
 async function setup(page, { missing = false, broken = false, markdown = source } = {}) {
   await page.route('**/talk/slides.md', route => route.fulfill({ body: markdown }));
@@ -101,7 +101,9 @@ for (const customFont of [true, false]) {
         return descriptor.get.call(this);
       } });
     });
-    await setup(page, { markdown: `---\n${customFont ? `font: ${live ? 'Noto Sans JP' : family}\n` : ''}title-weight: 500\nbody-weight: ${customFont ? 400 : 300}\n---\n# Title\n\nBody **bold**\n\n---\n\n# Hidden title\n\nHidden body` });
+    const settings = { 'title-weight': 500, 'body-weight': customFont ? 400 : 300 };
+    if (customFont) settings.font = live ? 'Noto Sans JP' : family;
+    await setup(page, { markdown: `---\n${JSON.stringify(settings)}\n---\n# Title\n\nBody **bold**\n\n---\n\n# Hidden title\n\nHidden body` });
     const measurements = await page.evaluate(() => window.measuredWeights);
     expect(measurements.length).toBeGreaterThan(0);
     expect(measurements.every(item => item.weight === (item.title ? '500' : (customFont ? '400' : '300')) && item.status === 'loaded')).toBe(true);

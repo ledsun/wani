@@ -57,7 +57,7 @@ class CLIServerTest < Minitest::Test
 
   def test_font_diagnostics_at_startup_and_after_document_changes
     file = File.join(@talk, "slides.md")
-    source = "---\nfont: Missing Font\n---\n# Hello\n"
+    source = "---\n{\"font\": \"Missing Font\"}\n---\n# Hello\n"
     File.write(file, source)
     messages = []
     app = Wani::Server::Application.new(file, assets: @assets, diagnostics: ->(message) { messages << message })
@@ -70,7 +70,7 @@ class CLIServerTest < Minitest::Test
     File.write(file, source)
     app.call("/talk/slides.md")
     assert_equal 2, messages.size
-    File.write(file, "---\nfont: []\n---\n# Hello\n")
+    File.write(file, "---\n{\"font\": []}\n---\n# Hello\n")
     assert_equal 200, app.call("/talk/slides.md")[0]
     assert_includes messages.last, "error: Invalid Markdown: font must be a non-empty font name or ID"
   end

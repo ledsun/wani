@@ -1,4 +1,4 @@
-require "yaml"
+require "json"
 require "kramdown"
 require "kramdown-parser-gfm"
 require_relative "presentation"
@@ -50,15 +50,15 @@ module Wani
         return [{}, lines] unless lines.first&.strip == "---"
         ending = (1...lines.length).find { |index| lines[index].strip == "---" }
         raise Error, "Unclosed Front Matter" unless ending
-        config = YAML.safe_load(lines[1...ending].join, permitted_classes: [], permitted_symbols: [], aliases: false) || {}
-        raise Error, "Front Matter must be a mapping" unless config.is_a?(Hash)
+        config = JSON.parse(lines[1...ending].join)
+        raise Error, "Front Matter must be a JSON object" unless config.is_a?(Hash)
         if config.key?("time_limit")
           limit = config["time_limit"]
           raise Error, "time_limit must be a finite non-negative number of minutes" unless limit.is_a?(Numeric) && limit.finite? && limit >= 0 && (limit * 60_000).finite?
         end
         [config, lines[(ending + 1)..]]
-      rescue Psych::Exception
-        raise Error, "Invalid or unsafe YAML in Front Matter"
+      rescue JSON::ParserError
+        raise Error, "Invalid JSON in Front Matter. Use a JSON object between the opening and closing --- lines."
       end
 
       def split_slides(lines, diagnostics)

@@ -340,12 +340,12 @@ test('speaker panels keep their height, fit the slide, and scroll long notes', a
 });
 
 test('legacy decorations setting is ignored and invalid Markdown is rejected', async ({ page }) => {
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\npage-footnote: Footnote\ndecorations: false\n---\n# Simple' }));
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\n{"page-footnote": "Footnote", "decorations": false}\n---\n# Simple' }));
   await ready(page);
   await expect(page.locator('.slide.active .decorations')).toBeVisible();
   await page.unroute('**/talk/slides.md');
-  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\npage-footnote: !ruby/object:Object {}\n---' }));
+  await page.route('**/talk/slides.md', route => route.fulfill({ body: '---\n{"time_limit":}\n---' }));
   await page.reload();
-  await expect(page.locator('#status')).toContainText('Invalid or unsafe YAML', { timeout: 60_000 });
+  await expect(page.locator('#status')).toContainText('Invalid JSON in Front Matter', { timeout: 60_000 });
   await expect(page.locator('#next')).toBeDisabled();
 });

@@ -1,5 +1,5 @@
 ---
-time_limit: 5
+{"time_limit": 5}
 ---
 
 # はじめての Wani

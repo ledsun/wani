@@ -25,7 +25,7 @@ RubyGems・Bundler・Prism の Ruby ライブラリ・テスト用 gem は収録
 ### WASM で使う標準拡張の検出
 
 `bundle exec rake build:wasm` の後に実行します。WASM 上で Wani のブラウザー用コードを読み込み、
-YAML 設定とコードハイライトを含むテンプレートを解析して、ロードされた標準拡張を
+JSON フロントマターとコードハイライトを含むテンプレートを解析して、ロードされた標準拡張を
 Ruby の `--with-ext` に渡せるカンマ区切りの形式で標準出力に出します。
 
 ```sh
@@ -50,7 +50,9 @@ npm test
 軽量版は `patch` コマンドで CRuby にパッチを適用し、Ruby ソースの構文解析を Prism に固定します。
 旧パーサー `parse.y` の本体をリンクから外すため、軽量版では `--parser=parse.y` を指定できず、
 `RubyVM::InstructionSequence.compile_parsey` と `RubyVM::AbstractSyntaxTree.parse` は `NotImplementedError` を送出します。
-文字コードは Ruby の組み込みの UTF-8・US-ASCII・ASCII-8BIT に加え、Psych が使う UTF-16LE／BE とその変換を組み込みます。
+軽量版に収録する文字コードは、Ruby 組み込みの UTF-8・US-ASCII・ASCII-8BIT です。
+Psych と YAML の標準ライブラリは軽量版から外し、Kramdown の YAML 読み込みは必要になるまで遅らせます。
+サーバー側のフォント登録ファイルは YAML 形式で保持し、ブラウザーには JSON で渡します。
 CRuby の C コンパイルはサイズ優先の `-Oz` を使います。
 ビルド済みのランタイムは `vendor/wani-wasm/` に CRuby のバージョン、拡張リスト、文字コード構成、最適化設定、パッチごとにキャッシュします。
 通常版を生成するには `bundle exec rake build:wasm` を実行してください。

@@ -66,7 +66,7 @@ class FontsTest < Minitest::Test
 
   def test_remove_preserves_user_files_and_blocks_used_fonts
     @manager.add('Noto Sans JP')
-    File.write("#{@root}/slides.md", "---\nfont: Noto Sans JP\n---\n# Hello")
+    File.write("#{@root}/slides.md", "---\n{\"font\": \"Noto Sans JP\"}\n---\n# Hello")
     assert_raises(Wani::Fonts::Error) { @manager.remove('noto-sans-jp') }
     File.write("#{@root}/fonts/noto-sans-jp/user.txt", 'keep')
     @manager.remove('noto-sans-jp', confirm: ->(_) { true })
@@ -187,16 +187,16 @@ class FontsTest < Minitest::Test
 
   def test_front_matter_font_weights
     parser = Wani::Core::Parser.new
-    presentation = parser.parse("---\nfont: Noto Sans JP\ntitle-weight: 500\nbody-weight: 400\n---\n# Text")
+    presentation = parser.parse("---\n{\"font\": \"Noto Sans JP\", \"title-weight\": 500, \"body-weight\": 400}\n---\n# Text")
     assert_equal({ 'default' => 'Noto Sans JP', 'title-weight' => 500, 'body-weight' => 400 }, presentation.fonts)
     assert_equal presentation.fonts, presentation.to_h[:fonts]
     assert_equal({}, parser.parse('# Text').fonts)
     %w[title-weight body-weight].each do |key|
       [1, 500, 1000].each do |weight|
-        assert_equal({ key => weight }, parser.parse("---\n#{key}: #{weight}\n---\n# Text").fonts)
+        assert_equal({ key => weight }, parser.parse("---\n{\"#{key}\": #{weight}}\n---\n# Text").fonts)
       end
-      ['0', '1001', '-1', '500.5', 'bold', '"500"', 'null', 'true', '[]'].each do |value|
-        error = assert_raises(Wani::Core::Parser::Error) { parser.parse("---\n#{key}: #{value}\n---\n# Text") }
+      ['0', '1001', '-1', '500.5', '"bold"', '"500"', 'null', 'true', '[]'].each do |value|
+        error = assert_raises(Wani::Core::Parser::Error) { parser.parse("---\n{\"#{key}\": #{value}}\n---\n# Text") }
         assert_includes error.message, key
       end
     end
@@ -223,8 +223,8 @@ class FontsTest < Minitest::Test
   end
 
   def test_core_and_server
-    assert_equal({ 'default' => 'Noto Sans JP' }, Wani::Core::Parser.new.parse("---\nfont: Noto Sans JP\n---\n# Text").fonts)
-    assert_raises(Wani::Core::Parser::Error) { Wani::Core::Parser.new.parse("---\nfont: []\n---\n# Text") }
+    assert_equal({ 'default' => 'Noto Sans JP' }, Wani::Core::Parser.new.parse("---\n{\"font\": \"Noto Sans JP\"}\n---\n# Text").fonts)
+    assert_raises(Wani::Core::Parser::Error) { Wani::Core::Parser.new.parse("---\n{\"font\": []}\n---\n# Text") }
     @manager.add('Noto Sans JP')
     File.write("#{@root}/slides.md", '# Text')
     File.write("#{@root}/fonts/noto-sans-jp/private.woff2", 'private')

@@ -7,7 +7,7 @@ class PageFootnoteTest < Minitest::Test
   end
 
   def test_only_page_footnotes_are_used
-    source = "---\npage-footnote: Default\n---\n# One\n\n---\n\n# Two\n\n<!-- page-footnote: Specific -->\n\n---\n\n# Three\n\n<!-- page-footnote: -->\n\n---\n\n# Four"
+    source = "---\n{\"page-footnote\": \"Default\"}\n---\n# One\n\n---\n\n# Two\n\n<!-- page-footnote: Specific -->\n\n---\n\n# Three\n\n<!-- page-footnote: -->\n\n---\n\n# Four"
     document = parse(source)
     assert_equal ["", "Specific", "", ""], document.slides.map(&:page_footnote)
     refute_includes document.to_h.keys, :page_footnote

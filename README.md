@@ -46,7 +46,7 @@ http://127.0.0.1:8000/ をブラウザーで開きます。
 
 ```markdown
 ---
-time_limit: 5
+{"time_limit": 5}
 ---
 
 # Ruby on WebAssembly
@@ -74,7 +74,8 @@ notes:
 - 本文： 段落、強調、リスト、引用、コード、リンク、画像、表が使用可能
 - ページ区切り : `---`
 
-詳細は [Markdown記法ガイド](docs/markdown.md) を参照してください。
+旧形式の YAML フロントマターを移行する場合は、[設定の書き方](docs/markdown.md#front-matter文書全体の設定) を参照してください。
+その他の記法は [Markdown記法ガイド](docs/markdown.md) にまとめています。
 
 ### コードの構文ハイライト
 
@@ -182,7 +183,7 @@ URL でスライド番号を指定した場合は、ボタンを表示せず、�
 
 既定では5分です。
 Front Matter の `time_limit` に分数を指定して変更できます（小数も可）。
-`time_limit: 0` でタイマーを無効にします。
+`"time_limit"` を `0` にするとタイマーを無効にします。
 
 
 ## スライドのフォーマット
@@ -241,13 +242,13 @@ Ctrl+P でも印刷できます。
 
 3. **`slides.md`の先頭に指定する**
 
-   ```yaml
+   ```markdown
    ---
-   font: Noto Sans JP
+   {"font": "Noto Sans JP"}
    ---
    ```
 
-   既にFront Matter（先頭の`---`で囲んだ設定）がある場合は、その中に`font: Noto Sans JP`を追記します。
+   既に Front Matter がある場合は、その JSON オブジェクトに `"font": "Noto Sans JP"` を追加します。
    設定の下に、スライドの見出しや本文を続けてください。コードの等幅フォントは変更されません。
 
 4. **ブラウザーで確認する**
@@ -270,11 +271,13 @@ wani font add https://fontsource.org/fonts/noto-sans-jp
 
 Front Matterの`title-weight`でタイトル、`body-weight`で本文の太さを指定できます。
 
-```yaml
+```markdown
 ---
-font: Noto Sans JP
-title-weight: 500
-body-weight: 400
+{
+  "font": "Noto Sans JP",
+  "title-weight": 500,
+  "body-weight": 400
+}
 ---
 ```
 

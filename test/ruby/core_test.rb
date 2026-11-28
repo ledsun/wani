@@ -10,10 +10,10 @@ class CoreTest < Minitest::Test
   def test_time_limit_defaults_and_validates_minutes
     assert_equal 5, parse("# Default").time_limit
     [0, 1, 2.5].each do |limit|
-      assert_equal limit, parse("---\ntime_limit: #{limit}\n---\n# Timer").time_limit
+      assert_equal limit, parse("---\n{\"time_limit\": #{limit}}\n---\n# Timer").time_limit
     end
-    ['-1', 'true', '"5"', '.inf', '.nan', '[]'].each do |limit|
-      assert_raises(Wani::Core::Parser::Error) { parse("---\ntime_limit: #{limit}\n---\n# Invalid") }
+    ['-1', 'true', '"5"', '1e999', '[]'].each do |limit|
+      assert_raises(Wani::Core::Parser::Error) { parse("---\n{\"time_limit\": #{limit}}\n---\n# Invalid") }
     end
   end
 
@@ -54,8 +54,8 @@ class CoreTest < Minitest::Test
     assert_includes document.slides[0].notes_html, "<hr>"
   end
 
-  def test_unsafe_yaml_and_unclosed_structures_are_rejected
-    ["---\npage-footnote: !ruby/object:Object {}\n---", "---\na: &a x\npage-footnote: *a\n---", "---\npage-footnote: [broken\n---", "---\npage-footnote: x", "# Title\n\n<!--\nnotes: never closed", "#\n"].each do |source|
+  def test_invalid_front_matter_and_unclosed_structures_are_rejected
+    ["---\ntime_limit: 5\n---", "---\n[]\n---", "---\nnull\n---", "---\n{\"time_limit\":}\n---", "---\n{}", "# Title\n\n<!--\nnotes: never closed", "#\n"].each do |source|
       assert_raises(Wani::Core::Parser::Error) { parse(source) }
     end
   end
@@ -99,7 +99,7 @@ class CoreTest < Minitest::Test
       assert_equal 0, cli.run(["check", file])
       File.write(file, "![Missing](missing.svg)")
       assert_equal 1, cli.run(["check", file])
-      File.write(file, "---\npage-footnote: [broken\n---")
+      File.write(file, "---\n{\"time_limit\":}\n---")
       assert_equal 1, cli.run(["check", file])
     end
   end
