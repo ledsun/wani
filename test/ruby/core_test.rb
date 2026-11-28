@@ -34,6 +34,18 @@ class CoreTest < Minitest::Test
     assert_equal "Literal <br> text", parse('# Literal &lt;br&gt; text').slides[0].title
   end
 
+  def test_markdown_table_uses_header_cells_only_in_the_header_row
+    document = parse(<<~MARKDOWN)
+      # Table
+
+      | **Name** | Size |
+      | --- | ---: |
+      | File | 1 MiB |
+    MARKDOWN
+    assert_equal "<table><thead><tr><th><strong>Name</strong></th><th>Size</th></tr></thead>" \
+                 "<tbody><tr><td>File</td><td>1 MiB</td></tr></tbody></table>", document.slides[0].html
+  end
+
   def test_separators_inside_code_and_notes_do_not_split
     source = "# Code\n\n```md\n---\n<!-- notes: literal -->\n```\n\n~~~\n---\n~~~\n\n    ---\n\n<!--\nnotes:\nBefore\n\n---\n\nAfter\n-->\n\n---\n\nLast"
     document = parse(source)

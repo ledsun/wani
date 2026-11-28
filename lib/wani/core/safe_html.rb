@@ -35,8 +35,12 @@ module Wani
         @diagnostic = diagnostic || ->(_message) {}
       end
 
-      def render(node)
-        body = node.children.map { |child| render(child) }.join
+      def render(node, table_header: false)
+        table_header = true if node.type == :thead
+        table_header = false if node.type == :table
+        body = node.children.map { |child| render(child, table_header: table_header) }.join
+        return "<th>#{body}</th>" if node.type == :td && table_header
+
         tag = TAGS[node.type]
         return "<#{tag}>#{body}</#{tag}>" if tag
         case node.type
