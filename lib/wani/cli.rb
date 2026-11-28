@@ -104,7 +104,7 @@ module Wani
       parser.parse!(args)
       raise ArgumentError, parser.banner if args.length > 1
       raise ArgumentError, "Port must be between 0 and 65535" unless (0..65535).cover?(options[:port])
-      unless %w[wani.wasm.gz wani.wasm].any? { |name| File.file?(File.join(ROOT, "assets", name)) }
+      unless %w[wani.wasm.br wani.wasm].any? { |name| File.file?(File.join(ROOT, "assets", name)) }
         raise ArgumentError, "Browser assets missing; run bundle exec rake build:wasm before gem build"
       end
       require_relative "server/http_server"

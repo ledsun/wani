@@ -11,7 +11,7 @@ module Wani
           StartCallback: -> { out.puts "Wani: http://#{bind.include?(':') ? "[#{bind}]" : bind}:#{@server.listeners.first.addr[1]}/"; out.flush })
         @server.mount_proc("/") do |request, response|
           if %w[GET HEAD].include?(request.request_method)
-            status, headers, body = app.call(request.unparsed_uri, accept_gzip: accepts_gzip?(request["Accept-Encoding"]))
+            status, headers, body = app.call(request.unparsed_uri, accept_brotli: accepts_brotli?(request["Accept-Encoding"]))
             response.status = status
             headers.each { |key, value| response[key] = value }
             response.body = body
@@ -32,11 +32,11 @@ module Wani
 
       private
 
-      def accepts_gzip?(header)
+      def accepts_brotli?(header)
         qualities = {}
         header.to_s.split(",").each do |entry|
           coding, weight = entry.downcase.split(";", 2).map(&:strip)
-          next unless %w[gzip *].include?(coding)
+          next unless %w[br *].include?(coding)
 
           qualities[coding] = if weight
                                 weight[/\Aq=(0(?:\.\d{0,3})?|1(?:\.0{0,3})?)\z/, 1].to_f
@@ -44,7 +44,7 @@ module Wani
                                 1
                               end
         end
-        qualities.fetch("gzip") { qualities.fetch("*", 0) }.positive?
+        qualities.fetch("br") { qualities.fetch("*", 0) }.positive?
       end
     end
   end

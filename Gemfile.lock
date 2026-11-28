@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     wani (0.1.31)
+      brotli (~> 0.9.3)
       kramdown (= 2.5.2)
       kramdown-parser-gfm (= 1.1.0)
       rexml (= 3.4.4)
@@ -11,6 +12,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    brotli (0.9.3)
     drb (2.2.3)
     kramdown (2.5.2)
       rexml (>= 3.4.4)
@@ -58,6 +60,8 @@ DEPENDENCIES
   wani!
 
 CHECKSUMS
+  brotli (0.9.3) sha256=645eb1ebb7b3776ed4f794f636cc21ab0a0923f6f8e87eff2b111e70bbe02607
+  bundler (4.0.23) sha256=407ba8a1d928f412847f819aa5f8b6aef7c59fb51feb517112af8a165487287b
   drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
   kramdown (2.5.2) sha256=1ba542204c66b6f9111ff00dcc26075b95b220b07f2905d8261740c82f7f02fa
   kramdown-parser-gfm (1.1.0) sha256=fb39745516427d2988543bf01fc4cf0ab1149476382393e0e9c48592f6581729

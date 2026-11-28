@@ -6,7 +6,7 @@ require "net/http"
 require "timeout"
 require "rbconfig"
 require "digest"
-require "zlib"
+require "brotli"
 
 root = File.expand_path("..", __dir__)
 dependency_paths = Gem.path
@@ -32,9 +32,10 @@ Dir.mktmpdir("wani-installed-") do |directory|
     installed_root = capture!(env, RbConfig.ruby, "-rwani", "-e", "puts Wani::ROOT").strip
     abort "Source checkout was used instead of installed gem" unless installed_root.start_with?(home + File::SEPARATOR)
     abort "Uncompressed wasm was installed" if File.exist?(File.join(installed_root, "assets/wani.wasm"))
-    gzip = File.binread(File.join(installed_root, "assets/wani.wasm.gz"))
+    abort "Gzip wasm was installed" if File.exist?(File.join(installed_root, "assets/wani.wasm.gz"))
+    br = File.binread(File.join(installed_root, "assets/wani.wasm.br"))
     wasm = File.binread(File.join(root, "assets/wani.wasm"))
-    abort "Installed wasm differs from build" unless Zlib.gunzip(gzip) == wasm
+    abort "Installed wasm differs from build" unless Brotli.inflate(br) == wasm
     timer_images = (1..4).map { |number| "assets/time-expired-#{number}.webp" }
     timer_images.each do |timer_image|
       abort "Installed #{timer_image} differs from source" unless Digest::SHA256.file(File.join(installed_root, timer_image)).hexdigest == Digest::SHA256.file(File.join(root, timer_image)).hexdigest
@@ -57,10 +58,10 @@ Dir.mktmpdir("wani-installed-") do |directory|
       end
       abort "Installed server did not serve Markdown" unless http.get("/talk/slides.md").code == "200"
       wasm_path = "/assets/wani.wasm"
-      compressed = http.get(wasm_path, "Accept-Encoding" => "gzip")
-      abort "Installed gzip wasm unavailable" unless compressed.code == "200" &&
-        compressed["Content-Type"] == "application/wasm" && compressed["Content-Encoding"] == "gzip" &&
-        compressed["Vary"] == "Accept-Encoding" && compressed.body == gzip
+      compressed = http.get(wasm_path, "Accept-Encoding" => "br")
+      abort "Installed Brotli wasm unavailable" unless compressed.code == "200" &&
+        compressed["Content-Type"] == "application/wasm" && compressed["Content-Encoding"] == "br" &&
+        compressed["Vary"] == "Accept-Encoding" && compressed.body == br
       identity = http.get(wasm_path, "Accept-Encoding" => "identity")
       abort "Installed identity wasm unavailable" unless identity.code == "200" &&
         identity["Content-Encoding"].nil? && identity.body == wasm

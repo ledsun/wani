@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2"
   spec.files = Dir["lib/**/*.rb", "exe/*", "assets/**/*", "templates/**/*", "third_party/**/*", "README.md", "LICENSE"].select { |file| File.file?(file) }
-  spec.files -= ["assets/wani.wasm"]
+  spec.files -= %w[assets/wani.wasm assets/wani.wasm.gz]
   spec.bindir = "exe"
   spec.executables = ["wani"]
   spec.require_paths = ["lib"]
@@ -17,5 +17,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rexml", "= 3.4.4"
   spec.add_dependency "rouge", "= 5.1.0"
   spec.add_dependency "webrick", "~> 1.9"
+  spec.add_dependency "brotli", "~> 0.9.3"
   spec.metadata["source_code_uri"] = spec.homepage
 end
